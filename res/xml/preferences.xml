@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android" 
+  android:title="Settings" 
+  android:summary="Settings for Power Hour Mobile">
+  
+  	<PreferenceCategory android:title="Song change alert">
+  
+	  	<CheckBoxPreference android:key="pref_usealert"
+	  		android:defaultValue="true"
+	  		android:title="Enable Alert"
+	  		android:summary="Play sound on song change" />
+	  		
+		<CheckBoxPreference android:key="pref_arnold"
+			android:defaultValue="true" 
+			android:title="Use default alert"
+			android:dependency="pref_usealert" 
+			android:summary="Do it now!"/>
+			
+		<gilday.android.powerhour.view.AudioFilePreference android:key="pref_alertpath"
+			android:defaultValue="arnold"
+			android:title="Custom alert sound" 
+			android:summary="pick a custom alert sound from your sd card or record you own"
+			android:shouldDisableView="true"
+			android:dependency="pref_usealert" />
+		
+	</PreferenceCategory>
+	
+	
+	<PreferenceCategory android:title="Music">
+	
+		<CheckBoxPreference android:key="pref_shuffle" 
+			android:title="Shuffle" 
+			android:defaultValue="true"/>
+			
+		<CheckBoxPreference android:key="pref_randomOffset"
+			android:defaultValue="false"
+			android:title="Randomize song offset" />
+		
+		<gilday.android.powerhour.view.RangePreference android:key="pref_offsetINT"
+			android:defaultValue="0" 
+			android:title="Select Offset"
+			android:summary="How far in should each song start?"
+			android:shouldDisableView="true" />
+		
+	</PreferenceCategory>
+	
+	
+	<PreferenceCategory android:title="Power Hour">
+	
+		<EditTextPreference android:key="pref_duration"
+			android:title="Power Hour Duration" 
+			android:summary="Change how long the power hour lasts. Power half-hour? Century?" 
+			android:defaultValue="60"
+			android:inputType="number"/>
+		
+		<CheckBoxPreference android:key="pref_quickload" 
+			android:title="Quick Load" 
+			android:summaryOn="Only load the first random 240 songs instead of the entire playlist. Helpful for loading in large playlists"
+			android:defaultValue="true" />	
+		
+	</PreferenceCategory>
+	
+</PreferenceScreen>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content" android:id="@+id/nowplaying_layout">
+	<TextView android:id="@+id/SongTitle" 
+		android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:ellipsize="end" android:singleLine="true"
+		android:textSize="20dip" android:text="Song Title" 
+		android:layout_marginTop="5dip" android:gravity="center_horizontal" />
+	<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:text="Artist" android:gravity="center_horizontal" android:layout_below="@+id/SongTitle" 
+		android:id="@+id/ArtistTitle" android:ellipsize="end"/>
+	<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:text="Album" android:gravity="center_horizontal" android:layout_below="@+id/ArtistTitle" 
+		android:id="@+id/AlbumTitle" android:ellipsize="end"/>
+		
+	<ProgressBar android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:id="@+id/SongProgress" 
+		android:layout_marginLeft="5dip" android:layout_marginRight="5dip" android:layout_below="@+id/AlbumTitle" 
+		style="?android:attr/progressBarStyleHorizontal" />
+		
+	<TextView android:layout_below="@+id/SongProgress" 
+		android:layout_width="fill_parent" 
+		android:layout_marginTop="10dip" android:gravity="center_horizontal"
+		android:id="@+id/MinutesText" android:text="00" android:textSize="70dip" android:layout_height="wrap_content"/>
+		
+	<RelativeLayout
+		android:id="@+id/NowPlaying_Controls"
+		android:layout_alignParentBottom="true"
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content"
+		android:layout_centerHorizontal="true">
+		
+		<ImageButton android:id="@+id/PlaylistButton"
+			android:src="@drawable/playlist" android:background="@null"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:padding="0px" 
+			android:hapticFeedbackEnabled="true"
+			android:onClick="playlistClick"/>
+	
+		<ImageButton android:id="@+id/PauseButton"
+			android:src="@drawable/pause" android:background="@null"
+			android:layout_width="wrap_content" android:layout_height="wrap_content" 
+			android:padding="0px"
+			android:layout_toRightOf="@+id/PlaylistButton" 
+			android:hapticFeedbackEnabled="true" 
+			android:onClick="pauseClick" android:layout_marginLeft="25dip" android:layout_marginRight="25dip"/>
+			
+		<ImageButton android:id="@+id/SkipButton"
+			android:src="@drawable/skip" android:background="@null"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:layout_margin="0px" android:padding="0px" 
+			android:layout_toRightOf="@+id/PauseButton" 
+			android:onClick="skipClick" />
+
+	</RelativeLayout>
+	
+	<ImageView android:id="@+id/ArtView" 
+		android:src="@drawable/bigicon" 
+		android:layout_width="fill_parent" android:layout_centerHorizontal="true" android:layout_height="wrap_content" 
+		android:layout_below="@+id/MinutesText" android:layout_above="@+id/NowPlaying_Controls" />	
+	
+</RelativeLayout>
+<!-- <LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_height="fill_parent" android:layout_width="fill_parent"
+	android:id="@+id/nowplaying_layout"
+	android:orientation="vertical">
+	<TextView android:id="@+id/SongTitle" 
+		android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:textSize="20dip" android:text="Song Title" 
+		android:layout_marginTop="5dip" android:gravity="center_horizontal" />
+	<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:text="Artist" android:gravity="center_horizontal"
+		android:id="@+id/ArtistTitle" />
+	<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:text="Album" android:gravity="center_horizontal"
+		android:id="@+id/AlbumTitle" />
+		
+	<ProgressBar android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:id="@+id/SongProgress" 
+		android:layout_marginLeft="5dip" android:layout_marginRight="5dip"
+		style="?android:attr/progressBarStyleHorizontal" />
+		
+	<TextView android:id="@+id/MinutesText"
+		android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:layout_marginTop="10dip" android:gravity="center_horizontal"
+		android:text="00" android:textSize="70dip" />
+		
+	<ImageView android:id="@+id/ArtView"
+		android:src="@drawable/bigicon" 
+		android:layout_height="wrap_content" android:layout_width="fill_parent" 
+		android:layout_gravity="center_horizontal"/>
+	
+	 <ImageButton android:id="@+id/PauseButton"
+		android:src="@drawable/pause" android:background="@null"
+		android:layout_width="wrap_content" android:layout_height="wrap_content" 
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentLeft="true" 
+		android:layout_margin="0px" android:padding="0px"/>
+</LinearLayout>-->

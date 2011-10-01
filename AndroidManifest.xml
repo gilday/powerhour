@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="gilday.android.powerhour"
+      android:versionName="1.5" android:versionCode="10">
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:description="@string/description" android:debuggable="false">
+    <activity android:label="@string/app_name" android:name="gilday.android.powerhour.view.TitleScreen" android:configChanges="orientation" />
+    <activity android:name="PowerHourPreferences" />
+    <activity android:name="gilday.android.powerhour.view.NowPlaying" 
+    		  android:theme="@android:style/Theme.Black.NoTitleBar" 
+    		  android:launchMode="singleTask">
+    	<intent-filter>
+			<action android:name="android.intent.action.MAIN" />
+			<category android:name="android.intent.category.LAUNCHER" />
+		</intent-filter>
+	</activity>
+	<activity android:name="gilday.android.powerhour.view.MyPlaylistBrowserActivity" />
+	<activity android:name="gilday.android.powerhour.view.SurrogateActivity" />
+	<service android:name="gilday.android.powerhour.PowerHourService" />
+	<activity android:name="gilday.android.powerhour.view.PlaylistEditor"></activity>
+</application>
+<uses-sdk android:minSdkVersion="7"/>
+<uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
+</manifest> 
