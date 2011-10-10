@@ -79,12 +79,13 @@ public class TitleScreen extends Activity {
 	private void startFromPlaylist(){
 		// Android didn't finish the damn PlaylistBrowserActivity. The PICK action 
 		// does not supply a URI. This method is ideal, so leave commented code here 
-		// until Google pushes an update. 2.0?
+		// until Google fixes. Bug # 958
 		/*
 		Intent i = new Intent(Intent.ACTION_PICK);
 		i.setType(MediaStore.Audio.Playlists.CONTENT_TYPE);
-		startActivityForResult(i, PLAYLIST);
+		startActivityForResult(i, 1);
 		*/
+		
 		Intent i = new Intent(this, MyPlaylistBrowserActivity.class);
 		startActivityForResult(i, 0);
 	}

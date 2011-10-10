@@ -23,6 +23,7 @@ import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 /**
  * @author Johnathan Gilday
@@ -87,6 +88,7 @@ public class PlaylistEditor extends Activity {
                 ViewHolder vh = new ViewHolder();
                 vh.songTextView = (TextView) v.findViewById(R.id.songitem_name);
                 vh.artistTextView = (TextView) v.findViewById(R.id.songitem_artist);
+                vh.omitToggleButton = (ToggleButton) v.findViewById(R.id.omit_toggle);
                 v.setTag(vh);
             } else {
                 v = convertView;
@@ -94,6 +96,7 @@ public class PlaylistEditor extends Activity {
             ViewHolder vh = (ViewHolder)v.getTag();
             vh.artistTextView.setText(playlistViewModel.get(position).artist);
             vh.songTextView.setText(playlistViewModel.get(position).song);
+            vh.omitToggleButton.setChecked(playlistViewModel.get(position).omit);
             return v;
 		}
 		
@@ -101,6 +104,7 @@ public class PlaylistEditor extends Activity {
 		private class ViewHolder {
 
 			TextView songTextView, artistTextView;
+			ToggleButton omitToggleButton;
 			
 		}
 	}
@@ -116,6 +120,7 @@ public class PlaylistEditor extends Activity {
 		public void bindView(View view, Context context, Cursor cursor) {
 			TextView artistView = (TextView)view.findViewById(R.id.songitem_artist);
 			TextView titleView = (TextView)view.findViewById(R.id.songitem_name);
+			ToggleButton omitToggleButton = (ToggleButton)view.findViewById(R.id.omit_toggle);
 			artistView.setText(cursor.getString(cursor.getColumnIndex("artist")));
 			titleView.setText(cursor.getString(cursor.getColumnIndex("title")));
 		}
