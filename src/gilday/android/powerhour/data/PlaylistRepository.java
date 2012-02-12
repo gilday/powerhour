@@ -3,22 +3,13 @@
  */
 package gilday.android.powerhour.data;
 
-import gilday.android.powerhour.MusicUtils;
-import gilday.android.powerhour.model.PlaylistItem;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.BaseAdapter;
 
 /**
  * Encapsulates operations for retrieving data from and affecting the Power Hour 
@@ -34,16 +25,19 @@ public class PlaylistRepository {
 	private int position = -1;
 	private Object mutateLock;
 	
-	private int playlistId = -1;
-	private ArrayList<Integer> playlist;
 	SQLiteDatabase readablePlaylistDB;
 	SQLiteDatabase writablePlaylistDB;
-	private boolean[] omissions;
 
 	private PlaylistRepository(){ 
 		mutateLock = new Object();
 	}
 	
+	/**
+	 * Follows Singleton pattern
+	 * TODO: See if we can't use dependency injection to remove consumers' implicit 
+	 * dependency on this implementation
+	 * @return
+	 */
 	public static PlaylistRepository getInstance(){
 		if(instance == null){
 			instance = new PlaylistRepository();
@@ -51,6 +45,11 @@ public class PlaylistRepository {
 		return instance;
 	}
 	
+	/**
+	 * Creates or opens the database and gets references writable and read only references to 
+	 * database helpers
+	 * @param context Need a context to pass on to the SQLite database helper
+	 */
 	public void init(Context context) {
 		if(readablePlaylistDB != null) {
 			readablePlaylistDB.close();
@@ -64,11 +63,19 @@ public class PlaylistRepository {
         clearPlaylist();        
 	}
 	
+	/**
+	 * Deletes all the items in the Power Hour playlist
+	 */
 	public void clearPlaylist() {
 		position = -1;
 		writablePlaylistDB.delete("current_playlist", null, null);
 	}
 	
+	/**
+	 * Measures the total size of the playlist INCLUDING songs flagged for omission. Returns 0 if the 
+	 * playlist has yet to be initialized.
+	 * @return
+	 */
 	public int getPlaylistSize() {
 		if(readablePlaylistDB != null) {
 			Cursor c = readablePlaylistDB.query("current_playlist", null, null, null, null, null, null);
@@ -79,6 +86,11 @@ public class PlaylistRepository {
 		return 0;
 	}
 	
+	/**
+	 * Returns the current position of the Power Hour playlist. Represents how many songs into the 
+	 * playlist this power hour is- not how many minutes have passed.
+	 * @return
+	 */
 	public int getPlaylistPosition()
 	{
 		return position;
@@ -185,6 +197,12 @@ public class PlaylistRepository {
 		return isOver;
 	}
 	
+	/**
+	 * Sets a song to be omitted from the playlist. An omitted song will be passed over 
+	 * when the position comes to it. 
+	 * @param songId ID of the song to omit / include
+	 * @param omit true = omit this song from the playlist. false = re-include this song
+	 */
 	public void setSongOmission(int songId, boolean omit) {
 		ContentValues updateNewPositionValues = new ContentValues();
 		int omitIntValue = omit ? 1 : 0;
@@ -198,18 +216,9 @@ public class PlaylistRepository {
 		}
 	}
 	
-	public List<PlaylistItem> getCurrentListViewModel(Context applicationContext) {
-		if(playlist == null) { return null; }
-		ArrayList<PlaylistItem> playlistVM = new ArrayList<PlaylistItem>(playlist.size());
-		Iterator<Integer> itr = playlist.iterator();
-		while(itr.hasNext()) {
-			int songId = itr.next();
-			PlaylistItem pi = MusicUtils.getInfoPack(applicationContext, songId, false);
-			playlistVM.add(pi);
-		}
-		return playlistVM;		
-	}
-	
+	/**
+	 * @return a writable cursor for the current playlist from the current position onward
+	 */
 	public Cursor getCursorForPlaylist() 
 	{
 		Cursor cursor = writablePlaylistDB.query(
@@ -219,75 +228,5 @@ public class PlaylistRepository {
 				new String[] { "" + position }, 
 				null, null, null);
 		return cursor;
-	}
-	
-	public BaseAdapter getAdapterForPlaylist(Context c, int layout, int[] layoutItems) {
-		ArrayList<HashMap<String,String>> playlistMap = new ArrayList<HashMap<String,String>>();
-		final String NAME = "NAME";
-		final String ARTIST = "ARTIST";
-		final String ID = "ID";
-		final String OMIT = "OMIT";
-		
-		// Populate playlist
-		if(playlist != null) {
-			// instead of using playlist, get cursor for performance reasons
-			Cursor cursor;
-			String[] projection;
-			if(playlistId > 0) {
-				projection = new String[] { 
-					MediaStore.Audio.Playlists.Members.AUDIO_ID,
-					MediaStore.Audio.Playlists.Members.ARTIST,
-					MediaStore.Audio.Playlists.Members.TITLE
-				};
-			    cursor = c.getContentResolver().query(
-			    	MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId),
-			    	projection, 
-			    	null, null, MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
-			} else {
-				projection = new String[] {
-					MediaStore.Audio.Media._ID,
-		        	MediaStore.Audio.Media.ARTIST,
-		        	MediaStore.Audio.Media.TITLE 
-				};
-				cursor = c.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-					projection, 
-		            MediaStore.Audio.Media.IS_MUSIC + "=1",
-		            null, null);
-			}
-			
-			int size = playlist.size();
-			for(int i = 0; i < size; i++) {
-				HashMap<String, String> item = new HashMap<String,String>();
-				item.put(ID, "" + cursor.getInt(cursor.getColumnIndex(projection[0])));
-				item.put(ARTIST, cursor.getString(cursor.getColumnIndex(projection[1])));
-				item.put(NAME, cursor.getString(cursor.getColumnIndex(NAME)));
-				
-				playlistMap.add(item);
-			}
-			
-			Iterator<Integer> itr = playlist.iterator();
-			while(itr.hasNext()) {
-				int id = itr.next();
-				PlaylistItem song = MusicUtils.getInfoPack(c, id);
-				HashMap<String,String> songItem = new HashMap<String,String>();
-				songItem.put(NAME, song.song);
-				songItem.put(ID, ""+id);
-				songItem.put(ARTIST, song.artist);
-				String omitString;
-				if(song.omit) {
-					omitString = "true";
-				} else {
-					omitString = "false";
-				}
-				songItem.put(OMIT, omitString);
-				playlistMap.add(songItem);
-			}
-		}
-//		
-//		SimpleAdapter myAdapter = new SimpleAdapter(c, playlistMap, layout, 
-//				new String[] { ID, NAME, ARTIST, OMIT }, layoutItems);
-//		
-//		return myAdapter;
-		return null;
 	}
 }
