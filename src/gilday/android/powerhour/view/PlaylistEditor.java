@@ -4,8 +4,8 @@
 package gilday.android.powerhour.view;
 
 import gilday.android.powerhour.R;
-import gilday.android.powerhour.model.PlaylistRepository;
-import gilday.android.powerhour.view.PlaylistCursorAdapter.OmitToggleHandler;
+import gilday.android.powerhour.data.PlaylistRepository;
+import gilday.android.powerhour.view.PlaylistCursorAdapter.SongOmitHandler;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -16,7 +16,7 @@ import android.widget.ListView;
  * @author Johnathan Gilday
  *
  */
-public class PlaylistEditor extends Activity implements OmitToggleHandler {
+public class PlaylistEditor extends Activity implements SongOmitHandler {
 	
 	PlaylistRepository playlistRepo = PlaylistRepository.getInstance(); 
 	
@@ -49,7 +49,7 @@ public class PlaylistEditor extends Activity implements OmitToggleHandler {
 	 * Handles the event when the user toggles a song in the playlist for 
 	 * omission or inclusion in the power hour
 	 */
-	public void toggle(int songId, boolean isChecked) {
+	public void onSongOmissionChanged(int songId, boolean isChecked) {
 		playlistRepo.setSongOmission(songId, isChecked);
 	}
 }

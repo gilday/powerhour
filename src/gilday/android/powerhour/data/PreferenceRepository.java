@@ -1,7 +1,7 @@
 /**
  * 
  */
-package gilday.android.powerhour.model;
+package gilday.android.powerhour.data;
 
 import gilday.android.powerhour.PowerHourPreferences;
 import android.content.Context;
@@ -9,6 +9,9 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 /**
+ * Encapsulates operations for retrieving  the Power Hour application 
+ * settings. These setting are backed by Android shared preferences but the 
+ * repository pattern hides this from the rest of the application
  * @author jgilday
  *
  */

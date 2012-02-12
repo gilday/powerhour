@@ -1,9 +1,14 @@
-package gilday.android.powerhour.model;
+package gilday.android.powerhour.data;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+/**
+ * Creates the Power Hour playlist SQLite database
+ * @author jgilday
+ *
+ */
 public class CurrentPlaylistDatabaseHelper extends SQLiteOpenHelper {
 	
 	private static String DATABASE_NAME = "powerhour";

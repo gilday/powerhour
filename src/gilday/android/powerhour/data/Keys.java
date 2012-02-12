@@ -1,7 +1,7 @@
 /**
  * 
  */
-package gilday.android.powerhour.model;
+package gilday.android.powerhour.data;
 
 /**
  * @author John Gilday

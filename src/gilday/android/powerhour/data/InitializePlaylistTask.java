@@ -1,4 +1,4 @@
-package gilday.android.powerhour.model;
+package gilday.android.powerhour.data;
 
 import java.util.Random;
 
@@ -10,12 +10,26 @@ import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
 
+/**
+ * Implements all the background leg work for initializing the Power Hour playlist from the 
+ * Android MediaStore. Can initialize the playlist based on all the songs in the MediaStore 
+ * or from a playlist saved in the MediaStore. Leaves the onProgressUpdate and onPostExecute 
+ * unimplemented so that a subclass of this abstract class may define how progress is conveyed 
+ * to the user.
+ * @author jgilday
+ *
+ */
 public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void> {
 	private Cursor importCursor;
 	protected Context context;
 	protected int songsToImportCount = 0;
 	protected int reportInterval = 5;
 
+	/**
+	 * Creates an InitializePlaylistTask which will create a new Power Hour playlist from 
+	 * all the songs stored in the Android MediaStore
+	 * @param context Need a context to get the MediaStore content resolver
+	 */
 	public InitializePlaylistTask(Context context) {
 		this.context = context;
 		if(context == null) {
@@ -35,6 +49,12 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		setSongsToImportCount();
 	}
 	
+	/**
+	 * Creates an InitializePlaylistTask which will create a new Power Hour playlist from 
+	 * a specific playlist in the Android MediaStore
+	 * @param context Need a context to get the MediaStore content resolver
+	 * @param playlistId The ID of the MediaStore.Audio.Playlists
+	 */
 	public InitializePlaylistTask(Context context, int playlistId) {
 		this.context = context;
 		if(context == null) {
@@ -65,6 +85,12 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		}
 	}
 
+	/**
+	 * Does all the leg work for loading in the Power Hour playlist from the Android 
+	 * MediaStore. Clears out the current playlist repository. Copies the Android playlist  
+	 * into the Power Hour playlist table. Copying the data seems redundant but the Power 
+	 * Hour playlist table has a unique schema with columns such as "omit".
+	 */
 	@Override
 	protected Void doInBackground(Void... params) {
 		final int playlistSize = importCursor.getCount();

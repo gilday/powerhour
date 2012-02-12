@@ -3,7 +3,7 @@
  */
 package gilday.android.powerhour;
 
-import gilday.android.powerhour.model.Keys;
+import gilday.android.powerhour.data.Keys;
 import gilday.android.powerhour.view.AudioFilePreference;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;

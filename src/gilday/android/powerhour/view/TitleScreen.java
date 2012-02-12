@@ -2,9 +2,9 @@ package gilday.android.powerhour.view;
 
 import gilday.android.powerhour.PowerHourPreferences;
 import gilday.android.powerhour.R;
-import gilday.android.powerhour.model.InitializePlaylistTask;
-import gilday.android.powerhour.model.Keys;
-import gilday.android.powerhour.model.PlaylistRepository;
+import gilday.android.powerhour.data.InitializePlaylistTask;
+import gilday.android.powerhour.data.Keys;
+import gilday.android.powerhour.data.PlaylistRepository;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -24,7 +24,7 @@ import android.widget.Toast;
 
 public class TitleScreen extends Activity {
 
-	private static final String TAG = "Get a Playlist";
+	private static final String TAG = "TitleScreenActivity";
 	private Button doitnow, startPlayList;
 	
     /** Called when the activity is first created. */
@@ -60,6 +60,8 @@ public class TitleScreen extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+    	// There is only one option on this menu and it's the settings 
+    	// list. Launch preferences
     	launchPreferences();
         return true;
     }
@@ -68,7 +70,8 @@ public class TitleScreen extends Activity {
     public void onConfigurationChanged(Configuration confg)
     {
     	super.onConfigurationChanged(confg);
-    	// do nothing
+    	// do nothing. Prevents the Activity from dying and coming back when the 
+    	// screen is rotated
     }
 
 	private void launchPreferences() {
@@ -77,9 +80,13 @@ public class TitleScreen extends Activity {
 	}
 	
 	private void startFromPlaylist(){
-		// Android didn't finish the damn PlaylistBrowserActivity. The PICK action 
-		// does not supply a URI. This method is ideal, so leave commented code here 
-		// until Google fixes. Bug # 958
+		/*
+		 * TODO
+		 * Android didn't finish the damn PlaylistBrowserActivity. The PICK action 
+		 * does not supply a URI. This method is ideal, so leave commented code here 
+		 * until Google fixes. Bug # 958
+		 */
+		
 		/*
 		Intent i = new Intent(Intent.ACTION_PICK);
 		i.setType(MediaStore.Audio.Playlists.CONTENT_TYPE);
@@ -129,6 +136,14 @@ public class TitleScreen extends Activity {
 		}
 	}
 	
+	/**
+	 * Initializes the Power Hour playlist with either all the songs in the Android 
+	 * MediaStore or a specific playlist. This implementation of InitializePlaylistTask 
+	 * reports progress to the user with a ProgressDialog. When the playlist is done 
+	 * loading, this TitleScreen Activity sets result and finishes
+	 * @author jgilday
+	 *
+	 */
 	private class MyInitializePlaylistTask extends InitializePlaylistTask 
 	{
 		private ProgressDialog progressDialog;

@@ -1,9 +1,10 @@
 /**
  * 
  */
-package gilday.android.powerhour.model;
+package gilday.android.powerhour.data;
 
 import gilday.android.powerhour.MusicUtils;
+import gilday.android.powerhour.model.PlaylistItem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,9 @@ import android.util.Log;
 import android.widget.BaseAdapter;
 
 /**
+ * Encapsulates operations for retrieving data from and affecting the Power Hour 
+ * playlist. This PlaylistRepository is backed by a SQLite database but the 
+ * repository pattern hides this from the rest of the application
  * @author Johnathan Gilday
  *
  */
@@ -90,7 +94,7 @@ public class PlaylistRepository {
 		position++;
 		Cursor cursor = writablePlaylistDB.query(
 				"current_playlist", 
-				new String[] {"_id"}, 
+				new String[] {"_id", "position"}, 
 				"position >= ? AND omit = ?", 
 				new String[] { position + "", "0" }, 
 				null, null, 
@@ -100,6 +104,13 @@ public class PlaylistRepository {
 			// return -1 to indicate this
 			return -1;
 		}
+		// Since the SQL query only takes songs that have not been omitted,  
+		// have the repository up its position to the first song returned; thus, 
+		// skipping over the omitted songs. If no songs have been skipped over, 
+		// then this shouldn't change the position at all
+		Log.d("PlaylistRepository", "Position was: " + position);
+		position = cursor.getInt(cursor.getColumnIndex("position"));
+		Log.d("PlaylistRepository", "Position  is: " + position);
 		int songId = -1;
 		if(shuffle){
 			// SHUFFLE ALGORITHM
@@ -166,8 +177,8 @@ public class PlaylistRepository {
 		Cursor cursor = readablePlaylistDB.query(
 				"current_playlist", 
 				new String[] {"_id"}, 
-				"position > ?", 
-				new String[] { "" + position }, 
+				"position > ? AND omit = ?", 
+				new String[] { "" + position, "0" }, 
 				null, null, null);
 		boolean isOver = !cursor.moveToFirst();
 		cursor.close();

@@ -15,12 +15,15 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 /**
+ * Cursor adapter which binds a Cursor for the Power Hour database to the playlist 
+ * edit list. Exposes an event which signifies when the user wishes to toggle the 
+ * omission property for a song item in the playlist
  * @author jgilday
  *
  */
 public class PlaylistCursorAdapter extends CursorAdapter {
 	
-	private OmitToggleHandler listener;
+	private SongOmitHandler listener;
 	/**
 	 * Holds the single instance of the OmitButtonHandler. Re-using 
 	 * the same OmitToggleHandler instance saves on performance.
@@ -41,13 +44,16 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 
 	@Override
 	public View newView(Context context, final Cursor cursor, ViewGroup parent) {
+		// Inflate the views
 		final LayoutInflater inflater = LayoutInflater.from(context);
 		final View view = inflater.inflate(R.layout.song_item, parent, false);
+		// Create a viewholder to hold references to the views 
 		ViewHolder vh = new ViewHolder();
 		vh.artistView = (TextView)view.findViewById(R.id.songitem_artist);
 		vh.titleView = (TextView)view.findViewById(R.id.songitem_name);
 		vh.omitToggleButton = (ToggleButton)view.findViewById(R.id.omit_toggle);
 		view.setTag(vh);
+		// Use helper function to bind cursor data to the views
 		bindViewHolder(vh, cursor);
 		// Clear out listeners in case they're still hanging around
 		vh.omitToggleButton.setOnCheckedChangeListener(null);
@@ -56,7 +62,7 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 		return view;
 	}
 	
-	public void setOmitToggleListener(OmitToggleHandler listener) {
+	public void setOmitToggleListener(SongOmitHandler listener) {
 		this.listener = listener;
 	}
 	
@@ -64,13 +70,21 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 		vh.artistView.setText(cursor.getString(cursor.getColumnIndex("artist")));
 		vh.titleView.setText(cursor.getString(cursor.getColumnIndex("title")));
 		int omit = cursor.getInt(cursor.getColumnIndex("omit"));
+		// Put the song ID in the toggle button's Tag reference
+		// This will help the onCheckedChanged event snag the song ID that it is relevant to
 		vh.omitToggleButton.setTag(cursor.getInt(cursor.getColumnIndex("_id")));
 		vh.omitToggleButton.setChecked(omit > 0);
 	}
 	
-	interface OmitToggleHandler
+	/**
+	 * The PlaylistCursorAdapter fires an event when a song is omitted from or marked for 
+	 * re-inclusion in the now playing playlist. 
+	 * @author jgilday
+	 *
+	 */
+	interface SongOmitHandler
 	{
-		void toggle(int songId, boolean isChecked);
+		void onSongOmissionChanged(int songId, boolean isOmitted);
 	}
 	
 	/**
@@ -88,7 +102,7 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 			// keeps all the View stuff encapsulated here
 			if(listener != null) {
 				int songId = (Integer) buttonView.getTag();
-				listener.toggle(songId, isChecked);
+				listener.onSongOmissionChanged(songId, isChecked);
 			}			
 		}
 	}

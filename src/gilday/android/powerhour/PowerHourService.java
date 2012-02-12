@@ -3,8 +3,8 @@
  */
 package gilday.android.powerhour;
 
-import gilday.android.powerhour.model.PlaylistRepository;
-import gilday.android.powerhour.model.PreferenceRepository;
+import gilday.android.powerhour.data.PlaylistRepository;
+import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.model.PlaylistItem;
 import gilday.android.powerhour.view.NowPlaying;
 

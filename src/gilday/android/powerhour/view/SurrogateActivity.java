@@ -3,7 +3,7 @@
  */
 package gilday.android.powerhour.view;
 
-import gilday.android.powerhour.model.Keys;
+import gilday.android.powerhour.data.Keys;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;

@@ -5,8 +5,8 @@ package gilday.android.powerhour.view;
 
 import gilday.android.powerhour.MusicUtils;
 import gilday.android.powerhour.R;
-import gilday.android.powerhour.model.Keys;
-import gilday.android.powerhour.model.PreferenceRepository;
+import gilday.android.powerhour.data.Keys;
+import gilday.android.powerhour.data.PreferenceRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
