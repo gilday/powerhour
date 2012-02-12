@@ -82,6 +82,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
         final int artistColumn = ih.getColumnIndex("artist");
         final int albumColumn = ih.getColumnIndex("album");
         final int titleColumn = ih.getColumnIndex("title");
+        final int omitColumn = ih.getColumnIndex("omit");
         
         int i = 0;
         
@@ -109,12 +110,14 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	String artist = importCursor.getString(sourceArtistColumn);
 		        	String album = importCursor.getString(sourceAlbumColumn);
 		        	String title = importCursor.getString(sourceTitleColumn);
+		        	int omit = 0;
 		        	
 		        	ih.bind(idColumn, songId);
 		        	ih.bind(positionColumn, i);
 		        	ih.bind(artistColumn, artist);
 		        	ih.bind(albumColumn, album);
 		        	ih.bind(titleColumn, title);
+		        	ih.bind(omitColumn, omit);
 		        	
 		        	ih.execute();
         			i++;
@@ -134,12 +137,14 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	String artist = importCursor.getString(sourceArtistColumn);
 		        	String album = importCursor.getString(sourceAlbumColumn);
 		        	String title = importCursor.getString(sourceTitleColumn);
+		        	int omit = 0;
 		        	
 		        	ih.bind(idColumn, songId);
 		        	ih.bind(positionColumn, i);
 		        	ih.bind(artistColumn, artist);
 		        	ih.bind(albumColumn, album);
 		        	ih.bind(titleColumn, title);
+		        	ih.bind(omitColumn, omit);
 		        	
 		        	ih.execute();
 		        	i++;

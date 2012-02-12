@@ -16,6 +16,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.BaseAdapter;
 
 /**
@@ -90,8 +91,8 @@ public class PlaylistRepository {
 		Cursor cursor = writablePlaylistDB.query(
 				"current_playlist", 
 				new String[] {"_id"}, 
-				"position >= ?", 
-				new String[] { position + "" }, 
+				"position >= ? AND omit = ?", 
+				new String[] { position + "", "0" }, 
 				null, null, 
 				"position ASC");
 		// if there are no more songs left
@@ -173,10 +174,17 @@ public class PlaylistRepository {
 		return isOver;
 	}
 	
-	public void toggleSongOmission(int songId) {
-		// TODO: implement
-		int index = playlist.indexOf(songId);
-		omissions[index] = !omissions[index];
+	public void setSongOmission(int songId, boolean omit) {
+		ContentValues updateNewPositionValues = new ContentValues();
+		int omitIntValue = omit ? 1 : 0;
+		updateNewPositionValues.put("omit", omitIntValue);
+		synchronized(mutateLock){
+			writablePlaylistDB.update(
+					"current_playlist",
+					updateNewPositionValues,
+					"_id = ?",
+					new String[] { "" + songId });
+		}
 	}
 	
 	public List<PlaylistItem> getCurrentListViewModel(Context applicationContext) {
@@ -195,7 +203,7 @@ public class PlaylistRepository {
 	{
 		Cursor cursor = writablePlaylistDB.query(
 				"current_playlist", 
-				new String[] { "_id", "title", "artist" }, 
+				new String[] { "_id", "title", "artist", "omit" }, 
 				"position > ?", 
 				new String[] { "" + position }, 
 				null, null, null);
