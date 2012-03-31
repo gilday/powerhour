@@ -17,6 +17,7 @@
 	<activity android:name="gilday.android.powerhour.view.SurrogateActivity" />
 	<service android:name="gilday.android.powerhour.PowerHourService" />
 	<activity android:name="gilday.android.powerhour.view.PlaylistEditor"></activity>
+	<provider android:label="Power Hour playlists" android:icon="@drawable/icon" android:authorities="com.johnathangilday.powerhour.provider" android:name="gilday.android.powerhour.provider.PlaylistProvider"></provider>
 </application>
 <uses-sdk android:minSdkVersion="7"/>
 <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>

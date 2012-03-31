@@ -10,7 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import android.widget.CursorAdapter;
+import android.support.v4.widget.CursorAdapter;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -30,9 +30,9 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	 */
 	private OmitButtonHandler internalButtonHandler;
 	
-	public PlaylistCursorAdapter(Context context, Cursor cursor) 
+	public PlaylistCursorAdapter(Context context, Cursor cursor, int flags) 
 	{
-		super(context, cursor);
+		super(context, cursor, flags);
 		internalButtonHandler = new OmitButtonHandler();
 	}
 
@@ -70,8 +70,8 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 		vh.artistView.setText(cursor.getString(cursor.getColumnIndex("artist")));
 		vh.titleView.setText(cursor.getString(cursor.getColumnIndex("title")));
 		int omit = cursor.getInt(cursor.getColumnIndex("omit"));
-		// Put the song ID in the toggle button's Tag reference
-		// This will help the onCheckedChanged event snag the song ID that it is relevant to
+		// Put the song ID and isChecked in the toggle button's Tag reference
+		// The song ID will help the onCheckedChanged event snag the song ID that it is relevant to
 		vh.omitToggleButton.setTag(cursor.getInt(cursor.getColumnIndex("_id")));
 		vh.omitToggleButton.setChecked(omit > 0);
 	}
@@ -82,7 +82,7 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	 * @author jgilday
 	 *
 	 */
-	interface SongOmitHandler
+	public interface SongOmitHandler
 	{
 		void onSongOmissionChanged(int songId, boolean isOmitted);
 	}

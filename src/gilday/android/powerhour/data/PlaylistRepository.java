@@ -215,18 +215,4 @@ public class PlaylistRepository {
 					new String[] { "" + songId });
 		}
 	}
-	
-	/**
-	 * @return a writable cursor for the current playlist from the current position onward
-	 */
-	public Cursor getCursorForPlaylist() 
-	{
-		Cursor cursor = writablePlaylistDB.query(
-				"current_playlist", 
-				new String[] { "_id", "title", "artist", "omit" }, 
-				"position > ?", 
-				new String[] { "" + position }, 
-				null, null, null);
-		return cursor;
-	}
 }

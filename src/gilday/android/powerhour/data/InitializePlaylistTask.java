@@ -1,5 +1,7 @@
 package gilday.android.powerhour.data;
 
+import gilday.android.powerhour.data.PowerHour.NowPlaying;
+
 import java.util.Random;
 
 import android.content.Context;
@@ -109,6 +111,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
         final int albumColumn = ih.getColumnIndex("album");
         final int titleColumn = ih.getColumnIndex("title");
         final int omitColumn = ih.getColumnIndex("omit");
+        final int playedColumn = ih.getColumnIndex(NowPlaying.PLAYED);
         
         int i = 0;
         
@@ -137,6 +140,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	String album = importCursor.getString(sourceAlbumColumn);
 		        	String title = importCursor.getString(sourceTitleColumn);
 		        	int omit = 0;
+		        	int played = 0;
 		        	
 		        	ih.bind(idColumn, songId);
 		        	ih.bind(positionColumn, i);
@@ -144,6 +148,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	ih.bind(albumColumn, album);
 		        	ih.bind(titleColumn, title);
 		        	ih.bind(omitColumn, omit);
+		        	ih.bind(playedColumn, played);
 		        	
 		        	ih.execute();
         			i++;
@@ -164,6 +169,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	String album = importCursor.getString(sourceAlbumColumn);
 		        	String title = importCursor.getString(sourceTitleColumn);
 		        	int omit = 0;
+		        	int played = 0;
 		        	
 		        	ih.bind(idColumn, songId);
 		        	ih.bind(positionColumn, i);
@@ -171,6 +177,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	ih.bind(albumColumn, album);
 		        	ih.bind(titleColumn, title);
 		        	ih.bind(omitColumn, omit);
+		        	ih.bind(playedColumn, played);
 		        	
 		        	ih.execute();
 		        	i++;

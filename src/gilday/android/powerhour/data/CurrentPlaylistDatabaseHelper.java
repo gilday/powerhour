@@ -1,5 +1,6 @@
 package gilday.android.powerhour.data;
 
+import gilday.android.powerhour.data.PowerHour.NowPlaying;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -11,22 +12,21 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class CurrentPlaylistDatabaseHelper extends SQLiteOpenHelper {
 	
-	private static String DATABASE_NAME = "powerhour";
 	private static int DATABASE_VERSION = 1;
-	private static String PLAYLIST_TABLE_NAME = "current_playlist";
     private static final String PLAYLIST_TABLE_CREATE =
-        "CREATE TABLE " + PLAYLIST_TABLE_NAME + " (" +
-        "_id INTEGER, " +
-        "position INTEGER, " +
-        "title VARCHAR, " + 
-        "album VARCHAR, " +
-        "album_id VARCHAR, " +
-        "artist VARCHAR, " +
-        "omit INTEGER);";
+        "CREATE TABLE " + NowPlaying.TABLE + " (" +
+        NowPlaying._ID + " INTEGER, " +
+        NowPlaying.POSITION + " INTEGER, " +
+        NowPlaying.TITLE + " VARCHAR, " + 
+        NowPlaying.ALBUM + " VARCHAR, " +
+        NowPlaying.ALBUM_ID + " VARCHAR, " +
+        NowPlaying.ARTIST + " VARCHAR, " +
+        NowPlaying.PLAYED + " INTEGER, " +
+        NowPlaying.OMIT + " INTEGER);";
 
 
 	public CurrentPlaylistDatabaseHelper(Context context) {
-		super(context, DATABASE_NAME, null, DATABASE_VERSION);
+		super(context, PowerHour.DATABASE, null, DATABASE_VERSION);
 	}
 
 	@Override
