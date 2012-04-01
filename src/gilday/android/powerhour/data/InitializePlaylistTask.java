@@ -143,7 +143,11 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	int played = 0;
 		        	
 		        	ih.bind(idColumn, songId);
-		        	ih.bind(positionColumn, i);
+		        	// Power Hour will not 0-index playlist positions so that we don't 
+		        	// have to bump this number up one in the user interface. Optimization 
+		        	// since this string to int and back conversion will happen a lot in a 
+		        	// list view
+		        	ih.bind(positionColumn, i + 1);
 		        	ih.bind(artistColumn, artist);
 		        	ih.bind(albumColumn, album);
 		        	ih.bind(titleColumn, title);
@@ -172,7 +176,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 		        	int played = 0;
 		        	
 		        	ih.bind(idColumn, songId);
-		        	ih.bind(positionColumn, i);
+		        	ih.bind(positionColumn, i + 1);
 		        	ih.bind(artistColumn, artist);
 		        	ih.bind(albumColumn, album);
 		        	ih.bind(titleColumn, title);

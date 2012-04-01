@@ -4,20 +4,51 @@
     android:id="@+id/container"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content">
-    <TextView android:layout_alignParentLeft="true" android:layout_alignParentTop="true" android:id="@+id/songitem_name" 
-    android:layout_height="wrap_content" android:layout_width="wrap_content"
-    android:layout_margin="3dip" 
-    android:textSize="20dip" android:textColor="#FFFFFF" 
-    android:text="Joelie" android:ellipsize="end"/>
-    <TextView android:layout_alignParentLeft="true" android:layout_below="@+id/songitem_name" android:id="@+id/songitem_artist"
-    android:layout_height="wrap_content" android:layout_width="wrap_content"
-    android:layout_marginLeft="3dip"
-    android:textSize="12dip" android:textColor="#CCCCCC" 
-    android:text="Steamy Ray Vaughn" android:ellipsize="end"/>
-    <ToggleButton android:id="@+id/omit_toggle" 
-    	android:layout_height="wrap_content" 
-    	android:layout_width="wrap_content" 
-    	android:layout_alignParentRight="true"
-    	android:layout_centerVertical="true"
-    	android:layout_margin="3dip" />
+
+    <TextView
+        android:id="@+id/songitem_name"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/songitem_omit"
+        android:layout_toRightOf="@+id/songitem_position"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:text="Joelie"
+        android:textColor="#FFFFFF"
+        android:textSize="20dip" />
+
+    <TextView
+        android:id="@+id/songitem_artist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/songitem_name"
+        android:layout_below="@+id/songitem_name"
+        android:layout_toRightOf="@+id/songitem_position"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:text="Steamy Ray Vaughn"
+        android:textColor="#CCCCCC"
+        android:textSize="12dip" />
+
+    <ToggleButton
+        android:id="@+id/songitem_omit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="3dip"
+        android:textOff="Skip"
+        android:textOn="Play" />
+
+    <TextView
+        android:id="@+id/songitem_position"
+        android:layout_width="35dip"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="3dip"
+        android:text="1234"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
 </RelativeLayout>

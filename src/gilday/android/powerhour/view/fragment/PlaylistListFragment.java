@@ -29,6 +29,8 @@ public class PlaylistListFragment extends ListFragment
 	@Override
 	public void onActivityCreated(Bundle savedState) {
 		super.onActivityCreated(savedState);
+		// Set properties for ListView
+		getListView().setFastScrollEnabled(true);
 		
 		// Initialize Loader
 		getLoaderManager().initLoader(0, null, this);
@@ -42,7 +44,7 @@ public class PlaylistListFragment extends ListFragment
 		return new CursorLoader(
 				getActivity(), 
 				NowPlaying.CONTENT_URI, 
-				new String[] { "_id", "title", "artist", "omit" },
+				new String[] { "_id", "title", "artist", "omit", "position" },
 				// Ask for songs which have not been played
 				NowPlaying.PLAYED + " = 0",
 				null, 

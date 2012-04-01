@@ -49,9 +49,10 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 		final View view = inflater.inflate(R.layout.song_item, parent, false);
 		// Create a viewholder to hold references to the views 
 		ViewHolder vh = new ViewHolder();
+		vh.positionView = (TextView)view.findViewById(R.id.songitem_position);
 		vh.artistView = (TextView)view.findViewById(R.id.songitem_artist);
 		vh.titleView = (TextView)view.findViewById(R.id.songitem_name);
-		vh.omitToggleButton = (ToggleButton)view.findViewById(R.id.omit_toggle);
+		vh.omitToggleButton = (ToggleButton)view.findViewById(R.id.songitem_omit);
 		view.setTag(vh);
 		// Use helper function to bind cursor data to the views
 		bindViewHolder(vh, cursor);
@@ -67,6 +68,7 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	}
 	
 	private void bindViewHolder(ViewHolder vh, Cursor cursor) {
+		vh.positionView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.POSITION)));
 		vh.artistView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.ARTIST)));
 		vh.titleView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.TITLE)));
 		int omit = cursor.getInt(cursor.getColumnIndex(NowPlaying.OMIT));
@@ -120,6 +122,7 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	 */
 	private class ViewHolder
 	{
+		public TextView positionView;
 		public TextView artistView;
 		public TextView titleView;
 		public ToggleButton omitToggleButton;
