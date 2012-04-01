@@ -196,23 +196,4 @@ public class PlaylistRepository {
 		cursor.close();
 		return isOver;
 	}
-	
-	/**
-	 * Sets a song to be omitted from the playlist. An omitted song will be passed over 
-	 * when the position comes to it. 
-	 * @param songId ID of the song to omit / include
-	 * @param omit true = omit this song from the playlist. false = re-include this song
-	 */
-	public void setSongOmission(int songId, boolean omit) {
-		ContentValues updateNewPositionValues = new ContentValues();
-		int omitIntValue = omit ? 1 : 0;
-		updateNewPositionValues.put("omit", omitIntValue);
-		synchronized(mutateLock){
-			writablePlaylistDB.update(
-					"current_playlist",
-					updateNewPositionValues,
-					"_id = ?",
-					new String[] { "" + songId });
-		}
-	}
 }
