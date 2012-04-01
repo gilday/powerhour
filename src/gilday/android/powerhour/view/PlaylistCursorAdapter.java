@@ -4,13 +4,13 @@
 package gilday.android.powerhour.view;
 
 import gilday.android.powerhour.R;
+import gilday.android.powerhour.data.PowerHour.NowPlaying;
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
-import android.support.v4.widget.CursorAdapter;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -56,9 +56,9 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 		// Use helper function to bind cursor data to the views
 		bindViewHolder(vh, cursor);
 		// Clear out listeners in case they're still hanging around
-		vh.omitToggleButton.setOnCheckedChangeListener(null);
+		vh.omitToggleButton.setOnClickListener(null);
 		// Register this listener
-		vh.omitToggleButton.setOnCheckedChangeListener(internalButtonHandler);
+		vh.omitToggleButton.setOnClickListener(internalButtonHandler);
 		return view;
 	}
 	
@@ -67,13 +67,13 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	}
 	
 	private void bindViewHolder(ViewHolder vh, Cursor cursor) {
-		vh.artistView.setText(cursor.getString(cursor.getColumnIndex("artist")));
-		vh.titleView.setText(cursor.getString(cursor.getColumnIndex("title")));
-		int omit = cursor.getInt(cursor.getColumnIndex("omit"));
+		vh.artistView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.ARTIST)));
+		vh.titleView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.TITLE)));
+		int omit = cursor.getInt(cursor.getColumnIndex(NowPlaying.OMIT));
 		// Put the song ID and isChecked in the toggle button's Tag reference
 		// The song ID will help the onCheckedChanged event snag the song ID that it is relevant to
-		vh.omitToggleButton.setTag(cursor.getInt(cursor.getColumnIndex("_id")));
-		vh.omitToggleButton.setChecked(omit > 0);
+		vh.omitToggleButton.setTag(cursor.getInt(cursor.getColumnIndex(NowPlaying._ID)));
+		vh.omitToggleButton.setChecked(omit <= 0);
 	}
 	
 	/**
@@ -88,22 +88,27 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	}
 	
 	/**
-	 * Using this private class to catch the CompoundButton.OnCheckedChangeListener 
+	 * Using this private class to catch the CompoundButton.OnClick 
 	 * to handle this View based event internally and without having to expose a 
 	 * public CompoundButton.OnCheckedChangeListener on PlaylistCursorAdapter
 	 * Better encapsulation of UI
+	 * Need to catch onClick instead of onCheckedChanged because the ContentProvider's interaction 
+	 * with this CursorAdapter causes an infinite loop of onCheckedChanged and it chokes the main 
+	 * thread
 	 * @author jgilday
 	 *
 	 */
-	private class OmitButtonHandler implements CompoundButton.OnCheckedChangeListener
+	private class OmitButtonHandler implements View.OnClickListener
 	{
-		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+		public void onClick(View v) {
 			// Forward this event on to a the OmitToggleListener in a way that 
 			// keeps all the View stuff encapsulated here
 			if(listener != null) {
-				int songId = (Integer) buttonView.getTag();
-				listener.onSongOmissionChanged(songId, isChecked);
-			}			
+				boolean isChecked = ((ToggleButton)v).isChecked();
+				int songId = (Integer) v.getTag();
+				listener.onSongOmissionChanged(songId, !isChecked);
+			}
 		}
 	}
 	
