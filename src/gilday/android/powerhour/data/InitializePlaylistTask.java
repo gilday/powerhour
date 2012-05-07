@@ -2,7 +2,9 @@ package gilday.android.powerhour.data;
 
 import gilday.android.powerhour.data.PowerHour.NowPlaying;
 
+import java.util.Collections;
 import java.util.Random;
+import java.util.Stack;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -23,6 +25,7 @@ import android.util.Log;
  */
 public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void> {
 	private Cursor importCursor;
+	private static final int QUICKLOAD_THRESHOLD = 180;
 	protected Context context;
 	protected int songsToImportCount = 0;
 	protected int reportInterval = 5;
@@ -81,9 +84,9 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 	{
 		songsToImportCount = importCursor.getCount();
 		PreferenceRepository prefsRepo = new PreferenceRepository(context);
-		if(songsToImportCount > 240 && prefsRepo.getQuickLoad()) 
+		if(songsToImportCount > (QUICKLOAD_THRESHOLD * 2) && prefsRepo.getQuickLoad()) 
 		{
-			songsToImportCount = 240;
+			songsToImportCount = QUICKLOAD_THRESHOLD;
 		}
 	}
 
@@ -95,8 +98,8 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 	 */
 	@Override
 	protected Void doInBackground(Void... params) {
-		final int playlistSize = importCursor.getCount();
-		if(importCursor == null || playlistSize <= 0) {
+		final int sourcePlaylistSize = importCursor.getCount();
+		if(importCursor == null || sourcePlaylistSize <= 0) {
 			throw new IllegalArgumentException("There are no songs in this playlist");
 		}
         
@@ -104,14 +107,15 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
         playlistRepo.clearPlaylist();
         SQLiteDatabase writablePlaylistDB = playlistRepo.writablePlaylistDB;
         
-        InsertHelper ih = new InsertHelper(writablePlaylistDB, "current_playlist");
-        final int positionColumn = ih.getColumnIndex("position");
-        final int idColumn = ih.getColumnIndex("_id");
-        final int artistColumn = ih.getColumnIndex("artist");
-        final int albumColumn = ih.getColumnIndex("album");
-        final int titleColumn = ih.getColumnIndex("title");
-        final int omitColumn = ih.getColumnIndex("omit");
+        InsertHelper ih = new InsertHelper(writablePlaylistDB, NowPlaying.TABLE);
+        final int idColumn = ih.getColumnIndex(NowPlaying._ID);
+        final int artistColumn = ih.getColumnIndex(NowPlaying.ARTIST);
+        final int albumColumn = ih.getColumnIndex(NowPlaying.ALBUM);
+        final int titleColumn = ih.getColumnIndex(NowPlaying.TITLE);
+        final int omitColumn = ih.getColumnIndex(NowPlaying.OMIT);
         final int playedColumn = ih.getColumnIndex(NowPlaying.PLAYED);
+        final int positionColumn = ih.getColumnIndex(NowPlaying.POSITION);
+        final int shufflePositionColumn = ih.getColumnIndex(NowPlaying.SHUFFLE_POSITION);
         
         int i = 0;
         
@@ -120,77 +124,105 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
         final int sourceAlbumColumn = importCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
         final int sourceTitleColumn = importCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
         
-        PreferenceRepository prefsRepo = new PreferenceRepository(context);
+        boolean quickLoad = new PreferenceRepository(context).getQuickLoad() && importCursor.getCount() > (QUICKLOAD_THRESHOLD * 2);
+        
+		// Build the playlist positions in shuffled order
+		// Will decide what shuffled order means up front instead of shuffling each item on the fly
+		// this allows users to see what the jumbled playlist looks like
+        Stack<Integer> shuffledPositions = getShuffledOrder();
     	
         long now = System.currentTimeMillis();
+        
+        importCursor.moveToFirst();
         writablePlaylistDB.setLockingEnabled(false);
+        
         try 
         {
-        	if(playlistSize > 240 && prefsRepo.getQuickLoad()) {
+        	if(quickLoad) {
+        		// Use fancy quick load algorithm to ensure we load enough songs for the power hour 
+        		// but don't waste all the user's time loading in the entire song collection since 
+        		// apparently it's huge
+        		int importSize = importCursor.getCount();
+        		int bucketSize = (int) (importSize / QUICKLOAD_THRESHOLD);
         		Random rand = new Random();
-        		while(i < 240) 
-        		{
-        			int position = rand.nextInt(playlistSize - i) + i;
-        			importCursor.moveToPosition(position);
-        			
+        		while(i < songsToImportCount) {
+        			// Move the cursor to the next source
+        			int bucketIndex = rand.nextInt(bucketSize);
+        			int sourcePosition = (i * bucketSize) + bucketIndex;
+        			importCursor.moveToPosition(sourcePosition);
+        			// Import
         			ih.prepareForInsert();
         			
-		        	int songId = importCursor.getInt(sourceIdColumn);
-		        	String artist = importCursor.getString(sourceArtistColumn);
-		        	String album = importCursor.getString(sourceAlbumColumn);
-		        	String title = importCursor.getString(sourceTitleColumn);
-		        	int omit = 0;
-		        	int played = 0;
-		        	
-		        	ih.bind(idColumn, songId);
-		        	// Power Hour will not 0-index playlist positions so that we don't 
-		        	// have to bump this number up one in the user interface. Optimization 
-		        	// since this string to int and back conversion will happen a lot in a 
-		        	// list view
-		        	ih.bind(positionColumn, i + 1);
-		        	ih.bind(artistColumn, artist);
-		        	ih.bind(albumColumn, album);
-		        	ih.bind(titleColumn, title);
-		        	ih.bind(omitColumn, omit);
-		        	ih.bind(playedColumn, played);
-		        	
-		        	ih.execute();
-        			i++;
+    	        	int songId = importCursor.getInt(sourceIdColumn);
+    	        	String artist = importCursor.getString(sourceArtistColumn);
+    	        	String album = importCursor.getString(sourceAlbumColumn);
+    	        	String title = importCursor.getString(sourceTitleColumn);
+    	        	int omit = 0;
+    	        	int played = 0;
+    	        	int shufflePosition = shuffledPositions.pop();
+    	        	
+    	        	ih.bind(idColumn, songId);
+    	        	// Power Hour will not 0-index playlist positions so that we don't 
+    	        	// have to bump this number up one in the user interface. Optimization 
+    	        	// since this string to int and back conversion will happen a lot in a 
+    	        	// list view
+    	        	ih.bind(positionColumn, i + 1);
+    	        	ih.bind(shufflePositionColumn, shufflePosition);
+    	        	ih.bind(artistColumn, artist);
+    	        	ih.bind(albumColumn, album);
+    	        	ih.bind(titleColumn, title);
+    	        	ih.bind(omitColumn, omit);
+    	        	ih.bind(playedColumn, played);
+    	        	
+    	        	ih.execute();
         			
         			if(i % reportInterval == 0) 
         			{
         				publishProgress();
         			}
+        			// iterate 
+        			i++;
         		}
-        		
-        	}
-        	else {
-		        while(importCursor.moveToNext()) {
-		        	ih.prepareForInsert();
-		        	
-		        	int songId = importCursor.getInt(sourceIdColumn);
-		        	String artist = importCursor.getString(sourceArtistColumn);
-		        	String album = importCursor.getString(sourceAlbumColumn);
-		        	String title = importCursor.getString(sourceTitleColumn);
-		        	int omit = 0;
-		        	int played = 0;
-		        	
-		        	ih.bind(idColumn, songId);
-		        	ih.bind(positionColumn, i + 1);
-		        	ih.bind(artistColumn, artist);
-		        	ih.bind(albumColumn, album);
-		        	ih.bind(titleColumn, title);
-		        	ih.bind(omitColumn, omit);
-		        	ih.bind(playedColumn, played);
-		        	
-		        	ih.execute();
-		        	i++;
-		        	
-		        	if(i % reportInterval == 0)
-		        	{
-		        		publishProgress();
-		        	}
-		        }
+        	} else {
+        		// Load all the songs without that fancy quick load algorithm
+        		// move to first
+        		importCursor.moveToFirst();
+        		// Import all
+        		while(i < songsToImportCount) {
+        			// Import
+        			ih.prepareForInsert();
+        			
+    	        	int songId = importCursor.getInt(sourceIdColumn);
+    	        	String artist = importCursor.getString(sourceArtistColumn);
+    	        	String album = importCursor.getString(sourceAlbumColumn);
+    	        	String title = importCursor.getString(sourceTitleColumn);
+    	        	int omit = 0;
+    	        	int played = 0;
+    	        	int shufflePosition = shuffledPositions.pop();
+    	        	
+    	        	ih.bind(idColumn, songId);
+    	        	// Power Hour will not 0-index playlist positions so that we don't 
+    	        	// have to bump this number up one in the user interface. Optimization 
+    	        	// since this string to int and back conversion will happen a lot in a 
+    	        	// list view
+    	        	ih.bind(positionColumn, i + 1);
+    	        	ih.bind(shufflePositionColumn, shufflePosition);
+    	        	ih.bind(artistColumn, artist);
+    	        	ih.bind(albumColumn, album);
+    	        	ih.bind(titleColumn, title);
+    	        	ih.bind(omitColumn, omit);
+    	        	ih.bind(playedColumn, played);
+    	        	
+    	        	ih.execute();
+        			
+        			if(i % reportInterval == 0) 
+        			{
+        				publishProgress();
+        			}
+        			// iterate
+        			i++;
+        			importCursor.moveToNext();
+        		}
         	}
         }
         finally 
@@ -202,5 +234,22 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
         importCursor.close();
         ih.close();
 		return null;
+	}
+	
+	/**
+	 * This needs to return a list of random integers in [0,songsToImportCount] with 
+	 * no duplicates as fast as possible. These will be pop'd off with each imported song 
+	 * to form the playlist's shuffled order
+	 * @return
+	 */
+	private Stack<Integer> getShuffledOrder() {
+		// Build a list of sequential integers [0, songsToImportCount]
+		Stack<Integer> listToShuffle = new Stack<Integer>();
+		for(int i = 0; i < songsToImportCount; i++) {
+			listToShuffle.push(i);
+		}
+		// Use Java's built in shuffle algorithm to shuffle list in linear time
+		Collections.shuffle(listToShuffle);
+		return listToShuffle;
 	}
 }

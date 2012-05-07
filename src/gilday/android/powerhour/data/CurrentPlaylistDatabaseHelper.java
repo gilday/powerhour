@@ -17,6 +17,7 @@ public class CurrentPlaylistDatabaseHelper extends SQLiteOpenHelper {
         "CREATE TABLE " + NowPlaying.TABLE + " (" +
         NowPlaying._ID + " INTEGER, " +
         NowPlaying.POSITION + " INTEGER, " +
+        NowPlaying.SHUFFLE_POSITION + " INTEGER, " +
         NowPlaying.TITLE + " VARCHAR, " + 
         NowPlaying.ALBUM + " VARCHAR, " +
         NowPlaying.ALBUM_ID + " VARCHAR, " +

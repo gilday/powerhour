@@ -4,6 +4,7 @@
 package gilday.android.powerhour;
 
 import gilday.android.powerhour.data.PlaylistRepository;
+import gilday.android.powerhour.data.PowerHour;
 import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.model.PlaylistItem;
 import gilday.android.powerhour.view.NowPlaying;
@@ -18,9 +19,12 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -146,10 +150,20 @@ public class PowerHourService extends Service {
 	 * @return the id (in terms of the Android MusicProvider) of the song that was just loaded
 	 */
 	int loadNextSong() {
+		PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
+		
+		// Set the current song as 'played'
+		int currentSong = playlistRepo.getCurrentSong();
+		if(currentSong >= 0) {
+			ContentValues values = new ContentValues();
+			values.put(PowerHour.NowPlaying.PLAYED, true);
+			Uri updateUri = ContentUris.withAppendedId(PowerHour.NowPlaying.CONTENT_URI, currentSong);
+			getContentResolver().update(updateUri, values, null, null);
+		}
+		
 		// Do expensive work before we reset the media player so we don't "skip a beat" bahahaha
 		// Advance to next song
 		boolean shuffle = powerHourPrefs.isShuffle();
-		PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
 		int songId = playlistRepo.getNextSong(shuffle);
 		if(songId == -1) {
 			return -1;

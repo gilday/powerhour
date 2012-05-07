@@ -5,6 +5,7 @@ package gilday.android.powerhour.view;
 
 import gilday.android.powerhour.R;
 import gilday.android.powerhour.data.PowerHour.NowPlaying;
+import gilday.android.powerhour.data.PreferenceRepository;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.CursorAdapter;
@@ -24,6 +25,8 @@ import android.widget.ToggleButton;
 public class PlaylistCursorAdapter extends CursorAdapter {
 	
 	private SongOmitHandler listener;
+	private boolean isShuffle;
+	
 	/**
 	 * Holds the single instance of the OmitButtonHandler. Re-using 
 	 * the same OmitToggleHandler instance saves on performance.
@@ -34,6 +37,7 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	{
 		super(context, cursor, flags);
 		internalButtonHandler = new OmitButtonHandler();
+		isShuffle = new PreferenceRepository(context).isShuffle();
 	}
 
 	@Override
@@ -68,7 +72,10 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 	}
 	
 	private void bindViewHolder(ViewHolder vh, Cursor cursor) {
-		vh.positionView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.POSITION)));
+		int position = isShuffle ? 
+				cursor.getInt(cursor.getColumnIndex(NowPlaying.SHUFFLE_POSITION)) : 
+				cursor.getInt(cursor.getColumnIndex(NowPlaying.POSITION));
+		vh.positionView.setText(String.valueOf(position));
 		vh.artistView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.ARTIST)));
 		vh.titleView.setText(cursor.getString(cursor.getColumnIndex(NowPlaying.TITLE)));
 		int omit = cursor.getInt(cursor.getColumnIndex(NowPlaying.OMIT));
@@ -76,6 +83,12 @@ public class PlaylistCursorAdapter extends CursorAdapter {
 		// The song ID will help the onCheckedChanged event snag the song ID that it is relevant to
 		vh.omitToggleButton.setTag(cursor.getInt(cursor.getColumnIndex(NowPlaying._ID)));
 		vh.omitToggleButton.setChecked(omit <= 0);
+		
+		boolean enableSongItem = cursor.getInt(cursor.getColumnIndex(NowPlaying.PLAYED)) <= 0;
+		vh.artistView.setEnabled(enableSongItem);
+		vh.positionView.setEnabled(enableSongItem);
+		vh.titleView.setEnabled(enableSongItem);
+		vh.omitToggleButton.setEnabled(enableSongItem);
 	}
 	
 	/**

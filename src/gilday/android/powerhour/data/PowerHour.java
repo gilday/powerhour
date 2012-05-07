@@ -56,6 +56,12 @@ public final class PowerHour {
 		public static final String POSITION = "position";
 		
 		/**
+		 * The song's position in the playlist when shuffle is enabled
+		 * <p>Type: INTEGER</p>
+		 */
+		public static final String SHUFFLE_POSITION = "shuffle_position";
+		
+		/**
 		 * The song's title
 		 * <p>Type: VARCHAR</p>
 		 */

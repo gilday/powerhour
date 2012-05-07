@@ -275,7 +275,7 @@ public class NowPlaying extends Activity {
     }
     
     public void playlistClick(View v) {
-    	Intent launchPlaylistEditor = new Intent(getBaseContext(), PlaylistEditor.class);
+    	Intent launchPlaylistEditor = new Intent().setClass(this, PlaylistEditor.class);
     	startActivity(launchPlaylistEditor);
     }
     

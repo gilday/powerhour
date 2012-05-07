@@ -15,7 +15,7 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:text="Joelie"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/song_item_title_text"
         android:textSize="20dip" />
 
     <TextView
@@ -28,7 +28,7 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:text="Steamy Ray Vaughn"
-        android:textColor="#CCCCCC"
+        android:textColor="@color/song_item_text"
         android:textSize="12dip" />
 
     <ToggleButton
@@ -49,6 +49,7 @@
         android:layout_centerVertical="true"
         android:layout_margin="3dip"
         android:text="1234"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
+        android:textAppearance="?android:attr/textAppearanceSmall" 
+        android:color="@color/song_item_text"/>
 
 </RelativeLayout>

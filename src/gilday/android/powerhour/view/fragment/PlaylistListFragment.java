@@ -4,6 +4,7 @@
 package gilday.android.powerhour.view.fragment;
 
 import gilday.android.powerhour.data.PowerHour.NowPlaying;
+import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.view.PlaylistCursorAdapter;
 import gilday.android.powerhour.view.PlaylistCursorAdapter.SongOmitHandler;
 import android.content.ContentUris;
@@ -41,14 +42,24 @@ public class PlaylistListFragment extends ListFragment
 	 * will load the remainder of the NowPlaying playlist (songs which have not been played yet)
 	 */
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
+		PreferenceRepository preferenceRepository = new PreferenceRepository(getActivity());
+		boolean shuffle = preferenceRepository.isShuffle();
+		String sortOrder = shuffle ? NowPlaying.SHUFFLE_POSITION + " asc" : NowPlaying.POSITION + " asc";
 		return new CursorLoader(
 				getActivity(), 
 				NowPlaying.CONTENT_URI, 
-				new String[] { "_id", "title", "artist", "omit", "position" },
+				new String[] { 
+					NowPlaying._ID, 
+					NowPlaying.TITLE, 
+					NowPlaying.ARTIST, 
+					NowPlaying.OMIT, 
+					NowPlaying.POSITION, 
+					NowPlaying.SHUFFLE_POSITION, 
+					NowPlaying.PLAYED },
 				// Ask for songs which have not been played
-				NowPlaying.PLAYED + " = 0",
+				null,
 				null, 
-				NowPlaying.POSITION + " asc");
+				sortOrder);
 	}
 
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
