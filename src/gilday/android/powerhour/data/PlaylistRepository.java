@@ -3,6 +3,8 @@
  */
 package gilday.android.powerhour.data;
 
+import gilday.android.powerhour.data.PowerHour.NowPlaying;
+
 import java.util.Random;
 
 import android.content.ContentValues;
@@ -23,6 +25,7 @@ public class PlaylistRepository {
 	private static PlaylistRepository instance;
 	
 	private int position = -1;
+	private int currentSong = -1;
 	private Object mutateLock;
 	
 	SQLiteDatabase readablePlaylistDB;
@@ -104,13 +107,14 @@ public class PlaylistRepository {
 	public int getNextSong(boolean shuffle) {
 		// Advance playlist
 		position++;
+		String positionColumn = shuffle ? NowPlaying.SHUFFLE_POSITION : NowPlaying.POSITION;
 		Cursor cursor = writablePlaylistDB.query(
 				"current_playlist", 
-				new String[] {"_id", "position"}, 
-				"position >= ? AND omit = ?", 
-				new String[] { position + "", "0" }, 
+				new String[] { NowPlaying._ID, NowPlaying.POSITION, NowPlaying.SHUFFLE_POSITION }, 
+				NowPlaying.PLAYED + " = ? AND " + NowPlaying.OMIT + " = ?", 
+				new String[] { "0", "0" }, 
 				null, null, 
-				"position ASC");
+				positionColumn + " ASC");
 		// if there are no more songs left
 		if(!cursor.moveToFirst()) {
 			// return -1 to indicate this
@@ -121,38 +125,12 @@ public class PlaylistRepository {
 		// skipping over the omitted songs. If no songs have been skipped over, 
 		// then this shouldn't change the position at all
 		Log.d("PlaylistRepository", "Position was: " + position);
-		position = cursor.getInt(cursor.getColumnIndex("position"));
+		position = cursor.getInt(cursor.getColumnIndex(positionColumn));
 		Log.d("PlaylistRepository", "Position  is: " + position);
 		int songId = -1;
-		if(shuffle){
-			// SHUFFLE ALGORITHM
-			// get an index in [current position , end]. This gives a random index for 
-			// a song that has not been played yet
-			// int nextIndex = new Random().nextInt(playlist.size() - position) + position;
-			int nextIndex = new Random().nextInt(cursor.getCount());
-			// swap this song that has not been played yet with the current index position
-			cursor.moveToPosition(nextIndex);
-			songId = cursor.getInt(cursor.getColumnIndex("_id"));
-			ContentValues updateOldPositionValues = new ContentValues();
-			updateOldPositionValues.put("position", position + nextIndex);
-			synchronized(mutateLock) {
-				writablePlaylistDB.update(
-						"current_playlist", 
-						updateOldPositionValues, 
-						"position = ?", 
-						new String[] { "" + position });
-				ContentValues updateNewPositionValues = new ContentValues();
-				updateNewPositionValues.put("position", position);
-				writablePlaylistDB.update(
-						"current_playlist",
-						updateNewPositionValues,
-						"_id = ?",
-						new String[] { "" + songId });
-			}
-			cursor.close();
-			return songId;
-		}
-		songId = cursor.getInt(cursor.getColumnIndex("_id"));
+
+		songId = cursor.getInt(cursor.getColumnIndex(NowPlaying._ID));
+		this.currentSong = songId;
 		cursor.close();
 		return songId;
 	}
@@ -167,22 +145,7 @@ public class PlaylistRepository {
 	}
 	
 	public int getCurrentSong() {
-		if(position < 0) {
-			return position;
-		}
-		Cursor cursor;
-		synchronized(mutateLock) {
-			cursor = readablePlaylistDB.query(
-					"current_playlist", 
-					new String[] { "_id" }, 
-					"position == ?", 
-					new String[] { "" + position }, 
-					null, null, null);
-			cursor.moveToFirst();
-		}
-		int currentSong = cursor.getInt(cursor.getColumnIndex("_id"));
-		cursor.close();
-		return currentSong;
+		return this.currentSong;
 	}
 	
 	public boolean isPlayingLastSong() {

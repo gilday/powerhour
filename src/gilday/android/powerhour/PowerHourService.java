@@ -151,6 +151,7 @@ public class PowerHourService extends Service {
 	 */
 	int loadNextSong() {
 		PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
+		boolean shuffle = powerHourPrefs.isShuffle();
 		
 		// Set the current song as 'played'
 		int currentSong = playlistRepo.getCurrentSong();
@@ -163,7 +164,6 @@ public class PowerHourService extends Service {
 		
 		// Do expensive work before we reset the media player so we don't "skip a beat" bahahaha
 		// Advance to next song
-		boolean shuffle = powerHourPrefs.isShuffle();
 		int songId = playlistRepo.getNextSong(shuffle);
 		if(songId == -1) {
 			return -1;
