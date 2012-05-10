@@ -56,8 +56,7 @@
 		
 		<CheckBoxPreference android:key="pref_quickload" 
 			android:title="Quick Load" 
-			android:summaryOn="Only load the first random 180 songs instead of the entire playlist. Helpful for loading in large playlists"
-			android:defaultValue="true" />	
+			android:defaultValue="true" android:summary="Only load the first random 180 songs instead of the entire playlist. Helpful for loading in large playlists"/>	
 		
 	</PreferenceCategory>
 	
