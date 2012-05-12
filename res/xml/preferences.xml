@@ -39,9 +39,9 @@
 		
 		<gilday.android.powerhour.view.RangePreference android:key="pref_offsetINT"
 			android:defaultValue="0" 
-			android:title="Select Offset"
-			android:summary="How far in should each song start?"
-			android:shouldDisableView="true" />
+			android:title="@string/rangepreferencetitle"
+			android:shouldDisableView="true" 
+			android:summary="@string/rangepreferencesummary" />
 		
 	</PreferenceCategory>
 	

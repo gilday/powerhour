@@ -23,7 +23,6 @@ import android.content.ServiceConnection;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
@@ -145,12 +144,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
             .setTitle("Are you sure you want to end power hour?")
             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-            		try {
-            			phService.stop();
-        			} catch (RemoteException e) {
-        				Log.e(TAG, "Could not stop the service, it must be dead already");
-        				e.printStackTrace();
-        			}
+                	phService.stop();
                 	restartApp();
                 }
             })
@@ -183,46 +177,39 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
 	private ServiceConnection rpcConnection = new ServiceConnection() {
         
 		public void onServiceConnected(ComponentName className, IBinder service) {
-            phService = IPowerHourService.Stub.asInterface(service);
-            try {
-                // Cache the playing state in this process to avoid more remote calls
-                int playing = phService.getPlayingState();
-                if(playing != PowerHourService.NOT_STARTED){
-                	//Log.d(TAG, "Binded to service. PH Started, get progress");
-                	int secondsElapsed = phService.getProgress();
-                	int nowplaying = PlaylistRepository.getInstance().getCurrentSong();
-                	// Q: Why do we have to check if these values are valid?
-                	// A: Due to a race condition, the Service could be "playing"
-                	// but it could still be loading the first song. This will 
-                	// check if the player is attempting to play but not actually 
-                	// playing
-                	if(secondsElapsed > 0 && nowplaying > 0){
-                		//Log.d(TAG, "WARNING: minutesElapsed= " + minutesElapsed + " nowplaying= " + nowplaying);
-                		// First call safeUpdateUI with both arguments to update progress bar
-                		updateUI(secondsElapsed, nowplaying);
-                	}
-                	// Update the pause button if the service is paused. 
-                	// This happens when the phone receives a call and the service pauses itself
-                	if(playing == PowerHourService.PAUSED) {
-                		pauseButton.setImageResource(R.drawable.play);
-                	} else {
-                		pauseButton.setImageResource(R.drawable.pause);
-                	}
-                }
-                else{
-                	// If playlist is not set...
-                	if(PlaylistRepository.getInstance().getPlaylistSize() <= 0){
-                		// start activity to select the playlist
-                    	Intent getList = new Intent(getBaseContext(), TitleScreen.class);
-                    	getList.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                    	startActivityForResult(getList, 0);
-                	}
-                }
-            } catch (RemoteException e) {
-                // In this case the service has crashed before we could even
-                // do anything with it; we can count on soon being
-                // disconnected (and then reconnected if it can be restarted)
-                // so there is no need to do anything here.
+            phService = (IPowerHourService)service;
+            // Cache the playing state in this process to avoid more remote calls
+            int playing = phService.getPlayingState();
+            if(playing != PowerHourService.NOT_STARTED){
+            	//Log.d(TAG, "Binded to service. PH Started, get progress");
+            	int secondsElapsed = phService.getProgress();
+            	int nowplaying = PlaylistRepository.getInstance().getCurrentSong();
+            	// Q: Why do we have to check if these values are valid?
+            	// A: Due to a race condition, the Service could be "playing"
+            	// but it could still be loading the first song. This will 
+            	// check if the player is attempting to play but not actually 
+            	// playing
+            	if(secondsElapsed > 0 && nowplaying > 0){
+            		//Log.d(TAG, "WARNING: minutesElapsed= " + minutesElapsed + " nowplaying= " + nowplaying);
+            		// First call safeUpdateUI with both arguments to update progress bar
+            		updateUI(secondsElapsed, nowplaying);
+            	}
+            	// Update the pause button if the service is paused. 
+            	// This happens when the phone receives a call and the service pauses itself
+            	if(playing == PowerHourService.PAUSED) {
+            		pauseButton.setImageResource(R.drawable.play);
+            	} else {
+            		pauseButton.setImageResource(R.drawable.pause);
+            	}
+            }
+            else{
+            	// If playlist is not set...
+            	if(PlaylistRepository.getInstance().getPlaylistSize() <= 0){
+            		// start activity to select the playlist
+                	Intent getList = new Intent(getBaseContext(), TitleScreen.class);
+                	getList.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                	startActivityForResult(getList, 0);
+            	}
             }
         }
 
@@ -247,32 +234,21 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
     }
     
     public void pauseClick(View v) {
-    	try{
-    		phService.pause();
-    		if(phService.getPlayingState() != PowerHourService.PLAYING){
-    			pauseButton.setImageResource(R.drawable.play);
-    		} else {
-    			pauseButton.setImageResource(R.drawable.pause);
-    		}
-    	}
-    	catch(RemoteException e){
-    		Log.e(TAG, "RemoteException while trying to pause");
-    	}
+		phService.pause();
+		if(phService.getPlayingState() != PowerHourService.PLAYING){
+			pauseButton.setImageResource(R.drawable.play);
+		} else {
+			pauseButton.setImageResource(R.drawable.pause);
+		}
     }
     
     public void skipClick(View v) {
-		try{
-			int nextID = phService.skip();
-			if(nextID < 0){
-				Toast.makeText(this, "Cannot skip last song", Toast.LENGTH_LONG).show();
-			}
-			else{
-				updateUI(nextID);
-			}
+		int nextID = phService.skip();
+		if(nextID < 0){
+			Toast.makeText(this, "Cannot skip last song", Toast.LENGTH_LONG).show();
 		}
-		catch(RemoteException e){
-			Log.e(TAG, "RemoteException when trying to skip");
-			e.printStackTrace();
+		else{
+			updateUI(nextID);
 		}
     }
     
@@ -330,12 +306,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
     	      .setMessage(getString(R.string.completed))
     	      .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
     	    	  public void onClick(DialogInterface inteface, int button){
-    	    		  try {
-						phService.stop();
-    	    		  } catch (RemoteException e) {
-						e.printStackTrace();
-						Log.e(TAG, "Cannot reach service to stop. We can trust that the service has stopped itself. Restart app");
-    	    		  }
+    	    		  phService.stop();
     	    		  restartApp();
     	    	  }
     	      })

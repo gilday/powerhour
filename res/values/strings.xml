@@ -3,23 +3,10 @@
     
     <string name="app_name">Power Hour Pro</string>
 <string name="title">POWER HOUR PRO</string>
-<string name="rangepreferencetitle">Song offset percentage</string>
-<string name="rangepreferencesummary"></string>
+<string name="rangepreferencetitle">Select Offset</string>
+<string name="rangepreferencesummary">How far in should each song start?</string>
 <string name="PlaylistBrowserTitle">Pick a playlist</string>
 <string name="PlaylistEditorTitle">Edit current playlist</string>
 <string name="completed">Power Hour complete- Now go out but don\'t drive!</string>
-<string name="description">Power Hour Pro for your Android phone gives you mobility and control over your power hours. Demo version will change on 10 second intervals and will expire in 8 minutes</string><string-array name="offset_precentagesValues"><item>Random</item>
-<item>0</item>
-<item>10</item>
-<item>20</item>
-<item>30</item>
-<item>50</item>
-</string-array><string-array name="offset_percentages"><item>Random</item>
-<item>Beginning</item>
-<item>10%</item>
-<item>20%</item>
-<item>30%</item>
-<item>50%</item>
-
-</string-array>
+<string name="description">Power Hour Pro for your Android phone gives you mobility and control over your power hours. Demo version will change on 10 second intervals and will expire in 8 minutes</string>
 </resources>

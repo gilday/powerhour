@@ -4,14 +4,9 @@
 package gilday.android.powerhour.data;
 
 import gilday.android.powerhour.data.PowerHour.NowPlaying;
-
-import java.util.Random;
-
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 /**
  * Encapsulates operations for retrieving data from and affecting the Power Hour 
@@ -26,14 +21,11 @@ public class PlaylistRepository {
 	
 	private int position = -1;
 	private int currentSong = -1;
-	private Object mutateLock;
 	
 	SQLiteDatabase readablePlaylistDB;
 	SQLiteDatabase writablePlaylistDB;
 
-	private PlaylistRepository(){ 
-		mutateLock = new Object();
-	}
+	private PlaylistRepository() { }
 	
 	/**
 	 * Follows Singleton pattern
@@ -124,9 +116,7 @@ public class PlaylistRepository {
 		// have the repository up its position to the first song returned; thus, 
 		// skipping over the omitted songs. If no songs have been skipped over, 
 		// then this shouldn't change the position at all
-		Log.d("PlaylistRepository", "Position was: " + position);
 		position = cursor.getInt(cursor.getColumnIndex(positionColumn));
-		Log.d("PlaylistRepository", "Position  is: " + position);
 		int songId = -1;
 
 		songId = cursor.getInt(cursor.getColumnIndex(NowPlaying._ID));

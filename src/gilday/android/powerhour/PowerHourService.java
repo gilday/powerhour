@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -114,7 +115,7 @@ public class PowerHourService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		//Log.(TAG, "onBind here");
-		return mBinder;
+		return (IBinder) mBinder;
 	}
 	
 	@Override
@@ -291,15 +292,16 @@ public class PowerHourService extends Service {
 	
 	void doStop(){
 		// Clear notification
-		// Clear notification
 		if(mNotificationManager != null){
 			mNotificationManager.cancel(R.layout.custom_notification_layout);
 		}
 		stopSelf();
 	}
 	
-	private final IPowerHourService.Stub mBinder = new IPowerHourService.Stub() {
-	    
+	private final IPowerHourService mBinder = new PowerHourServiceInterface();
+    
+    private class PowerHourServiceInterface extends Binder implements IPowerHourService
+    {
 	    public void stop() {
 	    	doStop();
 	    }
@@ -328,7 +330,7 @@ public class PowerHourService extends Service {
 	    public int getProgress(){
 	    	return seconds;
 	    }
-    };
+    }
 
     /** Used to throw a toast from the Timer thread */
     final Handler toastHandler = new Handler();
