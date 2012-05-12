@@ -3,8 +3,9 @@
  */
 package gilday.android.powerhour.view;
 
-import gilday.android.powerhour.IPowerHourClient;
+import gilday.android.powerhour.IMusicUpdateListener;
 import gilday.android.powerhour.IPowerHourService;
+import gilday.android.powerhour.MusicUpdateBroadcastReceiver;
 import gilday.android.powerhour.MusicUtils;
 import gilday.android.powerhour.PowerHourPreferences;
 import gilday.android.powerhour.PowerHourService;
@@ -17,11 +18,13 @@ import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,7 +40,7 @@ import android.widget.Toast;
  * @author John Gilday
  *
  */
-public class NowPlaying extends Activity {
+public class NowPlaying extends Activity implements IMusicUpdateListener{
 	// http://developer.android.com/guide/practices/design/performance.html#avoid_enums
 	private static final String TAG = "NowPlaying";
 	
@@ -48,6 +51,7 @@ public class NowPlaying extends Activity {
 	private ProgressBar pBar;
 	//private RelativeLayout layout;
 	private ImageView artView;
+	private MusicUpdateBroadcastReceiver updateReceiver;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -85,6 +89,10 @@ public class NowPlaying extends Activity {
 	    else{
 	    	//Log.d(TAG, "onStart binded to service");
 	    }
+	    // Register receiver
+		updateReceiver = new MusicUpdateBroadcastReceiver();
+		updateReceiver.registerUpdateListener(this);
+		LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(updateReceiver, new IntentFilter(PowerHourService.UPDATE_BROADCAST));
 	}
 	
 	@Override
@@ -94,18 +102,14 @@ public class NowPlaying extends Activity {
 		// Unbind from the service b/c this activity is not visible
 		// Hopefully unbinding will save memory and this activity can 
 		// just rebind onStart()
-		// Unregister client by passing null
-		if(phService != null){
-			try {
-				phService.registerClient(null);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-		}
 		phService = null;
 		// unbind service
 		//Log.d(TAG, "onSTOP unbind phService");
 		unbindService(rpcConnection);
+		// Unbind receiver
+		updateReceiver.unRegisterUpdateListener();
+		LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(updateReceiver);
+		updateReceiver = null;
 	}
 	
 	@Override
@@ -181,8 +185,6 @@ public class NowPlaying extends Activity {
 		public void onServiceConnected(ComponentName className, IBinder service) {
             phService = IPowerHourService.Stub.asInterface(service);
             try {
-            	//Log.d(TAG, "Binded to service. register client");
-                phService.registerClient(clientCallback);
                 // Cache the playing state in this process to avoid more remote calls
                 int playing = phService.getPlayingState();
                 if(playing != PowerHourService.NOT_STARTED){
@@ -329,7 +331,6 @@ public class NowPlaying extends Activity {
     	      .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
     	    	  public void onClick(DialogInterface inteface, int button){
     	    		  try {
-						phService.registerClient(null);
 						phService.stop();
     	    		  } catch (RemoteException e) {
 						e.printStackTrace();
@@ -361,22 +362,8 @@ public class NowPlaying extends Activity {
     	}
     	updateUI(id);
     }
-    
-	/**
-     * This implementation is used to receive callbacks from the remote
-     * service.
-     */
-    private IPowerHourClient clientCallback = new IPowerHourClient.Stub() {
-        /**
-         * This is called by the remote service regularly to tell us about
-         * new values.  Note that IPC calls are dispatched through a thread
-         * pool running in each process, so the code executing here will
-         * NOT be running in our main thread like most other things -- so,
-         * to update the UI, we need to use a Handler to hop over there.
-         */
-        
-        public void secondCompleted(int seconds, int songId){
-        	updateUI(seconds,songId);
-        }
-    };
+
+	public void onSongUpdate(int songID, int seconds) {
+		updateUI(seconds, songID);
+	}
 }

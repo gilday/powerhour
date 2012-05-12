@@ -5,14 +5,12 @@ package gilday.android.powerhour;
 
 // See the list above for which classes need
 // import statements (hint--most of them)
-import gilday.android.powerhour.IPowerHourClient;
 
 // Declare the interface.
 interface IPowerHourService {
     
     // Methods can take 0 or more parameters, and
     // return a value or void.
-    int registerClient(in IPowerHourClient client);
     
     void stop();
     void pause();

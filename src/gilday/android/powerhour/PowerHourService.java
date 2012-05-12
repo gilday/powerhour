@@ -27,7 +27,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.RemoteException;
+import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -46,21 +46,21 @@ public class PowerHourService extends Service {
 	// public static final int INTERVAL = 200;
 	public static final int COMPLETE_SENTINEL = -9999;
 	public static final int PAUSE_ACTION_ID = 2;
+	public static final String UPDATE_BROADCAST = "com.johnathangilday.powerhour.musicbroadcast";
+	public static final String SECONDS = "seconds";
+	public static final String SONGID = "songid";
+	
 	private static final String TAG = "PH_Service";
 	
 	private MediaPlayer mplayer;
 	private MediaPlayer soundClipPlayer;
-	private IPowerHourClient myClient;
 	private Timer myTimer;
 	private int seconds = -1;
 	private Random rand;
-	private long lastMinuteStart = -1;
 	private int playingState = NOT_STARTED;
 	Object mplayerLock = new Object();
 	Object splayerLock = new Object();
 	Handler mHandler = new Handler();
-	private boolean affectingClientVar = false;
-	private Object affectingClientVarLock = new Object();
 	private PreferenceRepository powerHourPrefs;
 	
 	// Notification objects
@@ -239,7 +239,6 @@ public class PowerHourService extends Service {
     	myTimer = new Timer();
     	// reassign rand to reset the random seed
     	rand = new Random();
-    	lastMinuteStart = System.currentTimeMillis();
 
     	// Create notification in status bar if not already instantiated
     	// Instantiate the notification and notification manager if they need to be
@@ -300,42 +299,6 @@ public class PowerHourService extends Service {
 	}
 	
 	private final IPowerHourService.Stub mBinder = new IPowerHourService.Stub() {
-		
-		/**
-		 * @return returns the elapsed time (in seconds) of the current minutes playing. 
-		 *  if the Power Hour is just starting, this will be 0.
-		 *  if the registration has failed, this will be a negative number
-		 *  if the Power Hour has been playing and the GUI is re-binding, this is the elapsed 
-		 *  second of the current minute. Use this to update any progress
-		 */
-		public int registerClient(IPowerHourClient client){
-			if(client == null){
-				// Enter a thread protected segment
-				synchronized(affectingClientVarLock){
-					try {
-						while(affectingClientVar)
-							affectingClientVarLock.wait();
-						affectingClientVar = true;
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					myClient = null;
-					affectingClientVar = false;
-					affectingClientVarLock.notify();
-				}
-				return 0;
-			}
-			if(myClient == null){
-				//Log.("service", "client registered");
-				myClient = client;
-				if(playingState != PowerHourService.NOT_STARTED){
-					return (int)((lastMinuteStart - System.currentTimeMillis()) / 1000);
-				}
-				return 0;
-			}
-			return -1;
-		}
 	    
 	    public void stop() {
 	    	doStop();
@@ -392,34 +355,11 @@ public class PowerHourService extends Service {
     			int duration = powerHourPrefs.getDuration();
     			PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
     			if(seconds >= duration || playlistRepo.isPlayingLastSong()){
-    				synchronized(affectingClientVarLock){
-	    				try {
-	    					while(affectingClientVar)
-	    						affectingClientVarLock.wait();
-	    					affectingClientVar = true;
-						} catch (InterruptedException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-	    				if(myClient != null){
-	    					mHandler.post(new Runnable(){
-								public void run() {
-									try { 
-										myClient.secondCompleted(seconds, COMPLETE_SENTINEL);
-									} catch (RemoteException e) {
-										e.printStackTrace();
-			    						Log.e(TAG, "Nasty error when calling minuteCompleted(COMPLETE_SENTINEL)  " + e.getMessage());
-			    						PowerHourService.this.doStop();
-									}
-								}
-	    					});
-	    				}
-	    				else{
-	    					toastHandler.post(runInUIThread);
-	    				}
-	    				affectingClientVar = false;
-	    				affectingClientVarLock.notify();
-    				}
+					Intent intent = new Intent();
+					intent.putExtra(PowerHourService.SECONDS, seconds);
+					intent.putExtra(PowerHourService.SONGID, COMPLETE_SENTINEL);
+					intent.setAction(PowerHourService.UPDATE_BROADCAST);
+					LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     				destroyStuff();
     				return;
     			}
@@ -460,36 +400,13 @@ public class PowerHourService extends Service {
     			}
     		}
     		
-    		// if we have a client registered, tell it a second has gone by
-    		synchronized(affectingClientVarLock){
-	    		try {
-	    			while(affectingClientVar)
-	    				affectingClientVarLock.wait();
-	    			affectingClientVar = true;
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-	    		if(myClient != null){
-					final int songId = PlaylistRepository.getInstance().getCurrentSong();
-					mHandler.post(new Runnable(){
-	
-						public void run() {
-							if(myClient != null){
-								try {
-									myClient.secondCompleted(seconds, songId);
-								} catch (RemoteException e) {
-									// do nothing
-								}
-							}
-						}
-						
-					});
-	    		}
-	    		affectingClientVar = false;
-	    		affectingClientVarLock.notify();
-    		}
-    		//Log.(TAG, "end tick!");
+    		// Send update
+    		final int songId = PlaylistRepository.getInstance().getCurrentSong();
+    		Intent intent = new Intent();
+    		intent.putExtra(PowerHourService.SECONDS, seconds);
+    		intent.putExtra(PowerHourService.SONGID, songId);
+    		intent.setAction(PowerHourService.UPDATE_BROADCAST);
+    		LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 		}
     }
 }
