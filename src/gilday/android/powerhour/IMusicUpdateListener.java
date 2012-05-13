@@ -2,5 +2,5 @@ package gilday.android.powerhour;
 
 public interface IMusicUpdateListener {
 
-	void onSongUpdate(int songID, int seconds);
+	void onSongUpdate(int songID);
 }

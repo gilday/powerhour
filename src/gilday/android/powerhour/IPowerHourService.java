@@ -1,5 +1,6 @@
 package gilday.android.powerhour;
 
+
 public interface IPowerHourService {
 
 	void start();

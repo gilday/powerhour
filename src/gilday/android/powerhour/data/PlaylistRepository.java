@@ -140,9 +140,9 @@ public class PlaylistRepository {
 	
 	public boolean isPlayingLastSong() {
 		Cursor cursor = readablePlaylistDB.query(
-				"current_playlist", 
-				new String[] {"_id"}, 
-				"position > ? AND omit = ?", 
+				NowPlaying.TABLE, 
+				new String[] { NowPlaying._ID }, 
+				NowPlaying.POSITION + " > ? AND " + NowPlaying.OMIT + " = ?", 
 				new String[] { "" + position, "0" }, 
 				null, null, null);
 		boolean isOver = !cursor.moveToFirst();

@@ -20,8 +20,7 @@ public class MusicUpdateBroadcastReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		if(listener != null) {
 			int songId = intent.getExtras().getInt(PowerHourService.SONGID);
-			int seconds = intent.getExtras().getInt(PowerHourService.SECONDS);
-			listener.onSongUpdate(songId, seconds);
+			listener.onSongUpdate(songId);
 		}
 	}
 

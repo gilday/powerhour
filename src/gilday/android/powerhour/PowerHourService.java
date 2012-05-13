@@ -45,11 +45,11 @@ public class PowerHourService extends Service {
 	public static final int PAUSED = 2;
 	public static final int INTERVAL = 1000;
 	// public static final int INTERVAL = 200;
-	public static final int COMPLETE_SENTINEL = -9999;
 	public static final int PAUSE_ACTION_ID = 2;
-	public static final String UPDATE_BROADCAST = "com.johnathangilday.powerhour.musicbroadcast";
-	public static final String SECONDS = "seconds";
+	public static final String MUSIC_UPDATE_BROADCAST = "com.johnathangilday.powerhour.musicupdatebroadcast";
+	public static final String PROGRESS_UPDATE_BROADCAST = "com.johnathangilday.powerhour.progressupdatebroadcast";
 	public static final String SONGID = "songid";
+	public static final String PROGRESS = "progress";
 	
 	private static final String TAG = "PH_Service";
 	
@@ -121,10 +121,6 @@ public class PowerHourService extends Service {
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
-		destroyStuff();
-	}
-	
-	void destroyStuff(){
 		myTimer.cancel();
 		if(playingState != PowerHourService.NOT_STARTED){
 			playingState = PowerHourService.NOT_STARTED;
@@ -232,6 +228,11 @@ public class PowerHourService extends Service {
 			
 			// Post to status bar
 			postToStatusBar(songId);
+    		// Send update
+    		Intent intent = new Intent();
+    		intent.putExtra(PowerHourService.SONGID, songId);
+    		intent.setAction(PowerHourService.MUSIC_UPDATE_BROADCAST);
+    		LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 		}
 		return songId;
 	}
@@ -252,7 +253,6 @@ public class PowerHourService extends Service {
 			notificationIntent = PendingIntent.getActivity(PowerHourService.this, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 			notification.contentIntent = notificationIntent;
     	}
-    	
     	myTimer.schedule(new SecondTimer(), 0, INTERVAL);
 	}
 	
@@ -279,22 +279,18 @@ public class PowerHourService extends Service {
 	
 	void doPause(){
     	if(playingState == PowerHourService.PLAYING) {
-    		myTimer.cancel();
     		mplayer.pause();
+    		myTimer.cancel();
     		playingState = PowerHourService.PAUSED;
     	} else {
-    		myTimer = new Timer();
     		mplayer.start();
+    		myTimer = new Timer();
+    		myTimer.schedule(new SecondTimer(), 1000, INTERVAL);
     		playingState = PowerHourService.PLAYING;
-    		myTimer.schedule(new SecondTimer(), 0, INTERVAL);
     	}
 	}
 	
 	void doStop(){
-		// Clear notification
-		if(mNotificationManager != null){
-			mNotificationManager.cancel(R.layout.custom_notification_layout);
-		}
 		stopSelf();
 	}
 	
@@ -332,47 +328,36 @@ public class PowerHourService extends Service {
 	    }
     }
 
-    /** Used to throw a toast from the Timer thread */
-    final Handler toastHandler = new Handler();
-    final Runnable runInUIThread = new Runnable() {
-        public void run() {
-        	Toast.makeText(PowerHourService.this, getString(R.string.completed), Toast.LENGTH_LONG).show();
-        	PowerHourService.this.doStop();
-        }
-      };
-
-
     private class SecondTimer extends TimerTask{
     	@Override
 		public void run() {
     		//Log.(TAG, "tick!");
     		seconds++;
     		playingState = PowerHourService.PLAYING;
-    		
-    		// If a solid minutes has gone by
     		if(seconds % 60 == 0) {
-    			//int minutes = seconds / 60;
-    			// If the power hour is over, or if the list is too small and there are no more songs to load,
-    			// end the power hour
-    			int duration = powerHourPrefs.getDuration();
-    			PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-    			if(seconds >= duration || playlistRepo.isPlayingLastSong()){
-					Intent intent = new Intent();
-					intent.putExtra(PowerHourService.SECONDS, seconds);
-					intent.putExtra(PowerHourService.SONGID, COMPLETE_SENTINEL);
-					intent.setAction(PowerHourService.UPDATE_BROADCAST);
-					LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-    				destroyStuff();
-    				return;
-    			}
-
-    			loadNextSong();
-    			// Play sound clip
-    			boolean useAlert = powerHourPrefs.getUseAlert();
-    			if(useAlert){
-    				boolean useArnold = powerHourPrefs.getUseArnold();
-    				String alertPath = powerHourPrefs.getAlertPath();
-    				synchronized(splayerLock){
+    			int minutes = seconds / 60;
+				// If the power hour is over, or if the list is too small and there are no more songs to load,
+				// end the power hour
+				int duration = powerHourPrefs.getDuration();
+				PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
+				if(minutes >= duration || playlistRepo.isPlayingLastSong()){
+					// Tear down
+					stopSelf();
+					return;
+				}
+				
+				loadNextSong();
+				// Send progress update
+				Intent intent = new Intent();
+				intent.putExtra(PowerHourService.PROGRESS, minutes);
+				intent.setAction(PowerHourService.PROGRESS_UPDATE_BROADCAST);
+				LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+				// Play sound clip
+				boolean useAlert = powerHourPrefs.getUseAlert();
+				if(useAlert){
+					boolean useArnold = powerHourPrefs.getUseArnold();
+					String alertPath = powerHourPrefs.getAlertPath();
+					synchronized(splayerLock){
 	    				soundClipPlayer.reset();
 	    				try{
 		    				if(useArnold || alertPath.equals("arnold")){
@@ -398,17 +383,9 @@ public class PowerHourService extends Service {
 	    					Log.e(TAG, errorMessage);
 	    					e.printStackTrace();
 	    				}
-    				}
-    			}
+					}
+				}
     		}
-    		
-    		// Send update
-    		final int songId = PlaylistRepository.getInstance().getCurrentSong();
-    		Intent intent = new Intent();
-    		intent.putExtra(PowerHourService.SECONDS, seconds);
-    		intent.putExtra(PowerHourService.SONGID, songId);
-    		intent.setAction(PowerHourService.UPDATE_BROADCAST);
-    		LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-		}
+    	}
     }
 }

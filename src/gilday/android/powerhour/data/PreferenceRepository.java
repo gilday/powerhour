@@ -39,8 +39,7 @@ public class PreferenceRepository {
 		} catch (NumberFormatException e){
 			duration = 60;
 		}
-		// multiply by 60 to put songs in terms of seconds
-		return duration * 60;
+		return duration;
 	}
 	
 	public boolean isShuffle() {

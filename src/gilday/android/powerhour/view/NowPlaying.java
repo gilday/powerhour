@@ -3,12 +3,17 @@
  */
 package gilday.android.powerhour.view;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import gilday.android.powerhour.IMusicUpdateListener;
 import gilday.android.powerhour.IPowerHourService;
+import gilday.android.powerhour.IProgressUpdateListener;
 import gilday.android.powerhour.MusicUpdateBroadcastReceiver;
 import gilday.android.powerhour.MusicUtils;
 import gilday.android.powerhour.PowerHourPreferences;
 import gilday.android.powerhour.PowerHourService;
+import gilday.android.powerhour.ProgressUpdateBroadcastReceiver;
 import gilday.android.powerhour.R;
 import gilday.android.powerhour.data.PlaylistRepository;
 import gilday.android.powerhour.data.PreferenceRepository;
@@ -22,6 +27,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -39,7 +45,7 @@ import android.widget.Toast;
  * @author John Gilday
  *
  */
-public class NowPlaying extends Activity implements IMusicUpdateListener{
+public class NowPlaying extends Activity implements IMusicUpdateListener, IProgressUpdateListener{
 	// http://developer.android.com/guide/practices/design/performance.html#avoid_enums
 	private static final String TAG = "NowPlaying";
 	
@@ -50,7 +56,9 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
 	private ProgressBar pBar;
 	//private RelativeLayout layout;
 	private ImageView artView;
-	private MusicUpdateBroadcastReceiver updateReceiver;
+	private MusicUpdateBroadcastReceiver musicUpdateReceiver;
+	private ProgressUpdateBroadcastReceiver progressUpdateReceiver;
+	private Timer progressUpdateTimer;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -77,38 +85,48 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
 	}
 	
 	@Override
-	protected void onStart(){
-		super.onStart();
+	protected void onResume(){
+		super.onResume();
 		// Bind to the started service.
 		Intent bindServiceIntent = new Intent(this, PowerHourService.class);
 		// Bind WITHOUT auto create set
-	    if(!bindService(bindServiceIntent, rpcConnection, 0)){
+	    if(!bindService(bindServiceIntent, phServiceConnection, 0)){
 	    	Log.e(TAG, "Could not bind to service");
 	    }
 	    else{
 	    	//Log.d(TAG, "onStart binded to service");
 	    }
 	    // Register receiver
-		updateReceiver = new MusicUpdateBroadcastReceiver();
-		updateReceiver.registerUpdateListener(this);
-		LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(updateReceiver, new IntentFilter(PowerHourService.UPDATE_BROADCAST));
+		musicUpdateReceiver = new MusicUpdateBroadcastReceiver();
+		musicUpdateReceiver.registerUpdateListener(this);
+		progressUpdateReceiver = new ProgressUpdateBroadcastReceiver();
+		progressUpdateReceiver.registerUpdateListener(this);
+		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
+		lbm.registerReceiver(musicUpdateReceiver, new IntentFilter(PowerHourService.MUSIC_UPDATE_BROADCAST));
+		lbm.registerReceiver(progressUpdateReceiver, new IntentFilter(PowerHourService.PROGRESS_UPDATE_BROADCAST));
 	}
 	
 	@Override
-	protected void onStop(){
-		super.onStop();
-		//Log.d(TAG, "onStop");
+	protected void onPause(){
+		super.onPause();
+		Log.d(TAG, "onPause");
 		// Unbind from the service b/c this activity is not visible
 		// Hopefully unbinding will save memory and this activity can 
 		// just rebind onStart()
 		phService = null;
 		// unbind service
 		//Log.d(TAG, "onSTOP unbind phService");
-		unbindService(rpcConnection);
+		unbindService(phServiceConnection);
 		// Unbind receiver
-		updateReceiver.unRegisterUpdateListener();
-		LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(updateReceiver);
-		updateReceiver = null;
+		musicUpdateReceiver.unRegisterUpdateListener();
+		LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(musicUpdateReceiver);
+		musicUpdateReceiver = null;
+		// Kill the local ProgressDisplayTimerTask
+		if(progressUpdateTimer != null) {
+			progressUpdateTimer.cancel();
+			progressUpdateTimer.purge();
+			progressUpdateTimer = null;
+		}
 	}
 	
 	@Override
@@ -153,19 +171,6 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
     		break;
     	case R.id.skipButton_menu:
     		skipClick(null);
-//    		try{
-//    			int nextID = phService.skip();
-//    			if(nextID < 0){
-//    				Toast.makeText(this, "Cannot skip song. PowerHour will not have enough songs to finish", Toast.LENGTH_LONG).show();
-//    			}
-//    			else{
-//    				updateUI(nextID);
-//    			}
-//    		}
-//    		catch(RemoteException e){
-//    			Log.e(TAG, "RemoteException when trying to skip");
-//    			e.printStackTrace();
-//    		}
     		break;
     	case R.id.settings:
     		launchSettings();
@@ -174,11 +179,10 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
         return true;
     }
 	
-	private ServiceConnection rpcConnection = new ServiceConnection() {
+	private ServiceConnection phServiceConnection = new ServiceConnection() {
         
 		public void onServiceConnected(ComponentName className, IBinder service) {
             phService = (IPowerHourService)service;
-            // Cache the playing state in this process to avoid more remote calls
             int playing = phService.getPlayingState();
             if(playing != PowerHourService.NOT_STARTED){
             	//Log.d(TAG, "Binded to service. PH Started, get progress");
@@ -186,13 +190,15 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
             	int nowplaying = PlaylistRepository.getInstance().getCurrentSong();
             	// Q: Why do we have to check if these values are valid?
             	// A: Due to a race condition, the Service could be "playing"
-            	// but it could still be loading the first song. This will 
-            	// check if the player is attempting to play but not actually 
-            	// playing
+            	//    but it could still be loading the first song. This will 
+            	//    check if the player is attempting to play but not actually 
+            	//    playing
             	if(secondsElapsed > 0 && nowplaying > 0){
             		//Log.d(TAG, "WARNING: minutesElapsed= " + minutesElapsed + " nowplaying= " + nowplaying);
             		// First call safeUpdateUI with both arguments to update progress bar
-            		updateUI(secondsElapsed, nowplaying);
+            		updateNowPlayingSongUI(nowplaying);
+            		updateMinutesText(secondsElapsed / 60);
+            		updateProgressBar(secondsElapsed);
             	}
             	// Update the pause button if the service is paused. 
             	// This happens when the phone receives a call and the service pauses itself
@@ -200,6 +206,8 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
             		pauseButton.setImageResource(R.drawable.play);
             	} else {
             		pauseButton.setImageResource(R.drawable.pause);
+            		progressUpdateTimer = new Timer();
+            		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(secondsElapsed), 1000, 1000);
             	}
             }
             else{
@@ -214,15 +222,14 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
         }
 
         public void onServiceDisconnected(ComponentName className) {
-        	if(phService != null){
-	            // We have not nulled out phService so the process has disconnected 
-	        	// unexpectadely. Show an error
-        		// TODO: Throw up an error
-	            phService = null;
-	            Log.e(TAG, "The PowerHourService has exited unexpectadely");
-	            finish();
-        	}
-        	//Log.d(TAG, "phService disconnected");
+        	new AlertDialog.Builder(NowPlaying.this)
+	  	      .setMessage(getString(R.string.completed))
+	  	      .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	  	    	  public void onClick(DialogInterface inteface, int button){
+	  	    		  restartApp();
+	  	    	  }
+	  	      })
+  	      .show();
         }
     };
     
@@ -235,10 +242,17 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
     
     public void pauseClick(View v) {
 		phService.pause();
+		if(progressUpdateTimer != null) {
+			progressUpdateTimer.cancel();
+			progressUpdateTimer.purge();
+		}
 		if(phService.getPlayingState() != PowerHourService.PLAYING){
 			pauseButton.setImageResource(R.drawable.play);
 		} else {
 			pauseButton.setImageResource(R.drawable.pause);
+			int secondsElapsed = phService.getProgress();
+			progressUpdateTimer = new Timer();
+			progressUpdateTimer.schedule(new ProgressDisplayTimerTask(secondsElapsed), 1000, 1000);
 		}
     }
     
@@ -246,9 +260,6 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
 		int nextID = phService.skip();
 		if(nextID < 0){
 			Toast.makeText(this, "Cannot skip last song", Toast.LENGTH_LONG).show();
-		}
-		else{
-			updateUI(nextID);
 		}
     }
     
@@ -262,7 +273,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
         startActivity(launchPreferencesIntent);
     }
     
-    void updateUI(int id){
+    void updateNowPlayingSongUI(int id){
     	PlaylistItem id3;
     	try 
     	{
@@ -295,46 +306,73 @@ public class NowPlaying extends Activity implements IMusicUpdateListener{
     	}
     }
     
-    public void settingsClick(View v){
-    	launchSettings();
+//    void scheduleProgressBarTimer(int secondsElapsed)
+//    {
+//		if(progressUpdateTimer != null) {
+//			progressUpdateTimer.cancel();
+//			progressUpdateTimer.purge();
+//		}
+//		progressUpdateTimer = new Timer();
+//		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(secondsElapsed), 0, 1000);
+//    }
+    
+    void updateMinutesText(int currentMinute) {
+    	// Increase minute bc users don't like to count from 0
+    	currentMinute++;
+    	if(currentMinute >= 10){
+    		minutesText.setText("" + currentMinute);
+    	}
+    	else{
+    		minutesText.setText("0" + currentMinute);
+    	}
     }
     
-    void updateUI(int seconds, int id){
-    	// If service sent the complete sentinel, end the power hour client
-    	if(id == PowerHourService.COMPLETE_SENTINEL){
-    		new AlertDialog.Builder(this)
-    	      .setMessage(getString(R.string.completed))
-    	      .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-    	    	  public void onClick(DialogInterface inteface, int button){
-    	    		  phService.stop();
-    	    		  restartApp();
-    	    	  }
-    	      })
-    	      .show();
-    		return;
-    	}
-    	
-    	// Update the progress bar to reflect the passing second
+    void updateProgressBar(int seconds)
+    {
+    	// Update the progress bar 
     	// Update the main progress bar to refelct the total progress
-    	int duration = new PreferenceRepository(this).getDuration();
+    	int duration = new PreferenceRepository(this).getDuration() * 60;
     	double ratio = (double) seconds / (double) duration;
     	pBar.setSecondaryProgress((int) (10000 * ratio));
     	// Update the secondary progress bar to reflect progress into the current minute
     	ratio = (double) ((seconds + 1) % 60) / (double) 60;
     	pBar.setProgress((int) (ratio * 10000));
-    	
-    	// Calculate the minutes that have passed
-    	int minutes = (seconds / 60) + 1;
-    	if(minutes >= 10){
-    		minutesText.setText("" + minutes);
-    	}
-    	else{
-    		minutesText.setText("0" + minutes);
-    	}
-    	updateUI(id);
     }
-
-	public void onSongUpdate(int songID, int seconds) {
-		updateUI(seconds, songID);
+    
+	public void onSongUpdate(int songID) {
+		updateNowPlayingSongUI(songID);
+	}
+	
+	public void onProgressUpdate(int currentMinute) {
+		if(progressUpdateTimer != null) {
+			progressUpdateTimer.cancel();
+			progressUpdateTimer.purge();
+		}
+		progressUpdateTimer = new Timer();
+		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(currentMinute * 60), 1000, 1000);
+		updateMinutesText(currentMinute);
+	}
+	
+	private class ProgressDisplayTimerTask extends TimerTask
+	{
+		private int seconds;
+		private Handler handler;
+		
+		public ProgressDisplayTimerTask(int seconds)
+		{
+			this.seconds = seconds;
+			this.handler = new Handler();
+		}
+		
+		@Override
+		public void run()
+		{
+			seconds++;
+			handler.post(new Runnable() {
+				public void run() {
+					NowPlaying.this.updateProgressBar(seconds);
+				}
+			});
+		}
 	}
 }
