@@ -105,7 +105,7 @@ public class PowerHourService extends Service {
 				throw new ArrayIndexOutOfBoundsException("The song list given to PowerHourService contains no songs!");
 			}
 			int duration = powerHourPrefs.getDuration();
-			if(playlistRepo.getPlaylistSize() < (duration / 60)){
+			if(playlistRepo.getPlaylistSize() < duration){
 				toastError("You have added only " + playlistRepo.getPlaylistSize() + " songs. Your Power Hour is going to be a little short");
 			}
 			doStart();

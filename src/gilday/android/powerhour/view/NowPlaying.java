@@ -59,6 +59,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 	private MusicUpdateBroadcastReceiver musicUpdateReceiver;
 	private ProgressUpdateBroadcastReceiver progressUpdateReceiver;
 	private Timer progressUpdateTimer;
+	private final int progressTimerInterval = 500;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -93,10 +94,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 	    if(!bindService(bindServiceIntent, phServiceConnection, 0)){
 	    	Log.e(TAG, "Could not bind to service");
 	    }
-	    else{
-	    	//Log.d(TAG, "onStart binded to service");
-	    }
-	    // Register receiver
+	    // Register receivers
 		musicUpdateReceiver = new MusicUpdateBroadcastReceiver();
 		musicUpdateReceiver.registerUpdateListener(this);
 		progressUpdateReceiver = new ProgressUpdateBroadcastReceiver();
@@ -117,10 +115,14 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 		// unbind service
 		//Log.d(TAG, "onSTOP unbind phService");
 		unbindService(phServiceConnection);
-		// Unbind receiver
+		// Unbind receivers
 		musicUpdateReceiver.unRegisterUpdateListener();
-		LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(musicUpdateReceiver);
+		progressUpdateReceiver.unregisterUpdateListener();
+		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
+		lbm.unregisterReceiver(musicUpdateReceiver);
+		lbm.unregisterReceiver(progressUpdateReceiver);
 		musicUpdateReceiver = null;
+		progressUpdateReceiver = null;
 		// Kill the local ProgressDisplayTimerTask
 		if(progressUpdateTimer != null) {
 			progressUpdateTimer.cancel();
@@ -187,6 +189,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
             if(playing != PowerHourService.NOT_STARTED){
             	//Log.d(TAG, "Binded to service. PH Started, get progress");
             	int secondsElapsed = phService.getProgress();
+            	int milisecondsElapsed = secondsElapsed * 1000;
             	int nowplaying = PlaylistRepository.getInstance().getCurrentSong();
             	// Q: Why do we have to check if these values are valid?
             	// A: Due to a race condition, the Service could be "playing"
@@ -198,7 +201,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
             		// First call safeUpdateUI with both arguments to update progress bar
             		updateNowPlayingSongUI(nowplaying);
             		updateMinutesText(secondsElapsed / 60);
-            		updateProgressBar(secondsElapsed);
+            		updateProgressBar(milisecondsElapsed);
             	}
             	// Update the pause button if the service is paused. 
             	// This happens when the phone receives a call and the service pauses itself
@@ -207,7 +210,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
             	} else {
             		pauseButton.setImageResource(R.drawable.pause);
             		progressUpdateTimer = new Timer();
-            		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(secondsElapsed), 1000, 1000);
+            		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(milisecondsElapsed), 0, progressTimerInterval);
             	}
             }
             else{
@@ -250,9 +253,9 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 			pauseButton.setImageResource(R.drawable.play);
 		} else {
 			pauseButton.setImageResource(R.drawable.pause);
-			int secondsElapsed = phService.getProgress();
+			int milisecondsElapsed = phService.getProgress() * 1000;
 			progressUpdateTimer = new Timer();
-			progressUpdateTimer.schedule(new ProgressDisplayTimerTask(secondsElapsed), 1000, 1000);
+			progressUpdateTimer.schedule(new ProgressDisplayTimerTask(milisecondsElapsed), 0, progressTimerInterval);
 		}
     }
     
@@ -306,16 +309,6 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
     	}
     }
     
-//    void scheduleProgressBarTimer(int secondsElapsed)
-//    {
-//		if(progressUpdateTimer != null) {
-//			progressUpdateTimer.cancel();
-//			progressUpdateTimer.purge();
-//		}
-//		progressUpdateTimer = new Timer();
-//		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(secondsElapsed), 0, 1000);
-//    }
-    
     void updateMinutesText(int currentMinute) {
     	// Increase minute bc users don't like to count from 0
     	currentMinute++;
@@ -327,15 +320,15 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
     	}
     }
     
-    void updateProgressBar(int seconds)
+    void updateProgressBar(int miliseconds)
     {
     	// Update the progress bar 
     	// Update the main progress bar to refelct the total progress
-    	int duration = new PreferenceRepository(this).getDuration() * 60;
-    	double ratio = (double) seconds / (double) duration;
+    	int duration = new PreferenceRepository(this).getDuration() * 60000;
+    	double ratio = (double) miliseconds / (double) duration;
     	pBar.setSecondaryProgress((int) (10000 * ratio));
     	// Update the secondary progress bar to reflect progress into the current minute
-    	ratio = (double) ((seconds + 1) % 60) / (double) 60;
+    	ratio = (double) (miliseconds % 60000) / (double) 60000;
     	pBar.setProgress((int) (ratio * 10000));
     }
     
@@ -349,28 +342,28 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 			progressUpdateTimer.purge();
 		}
 		progressUpdateTimer = new Timer();
-		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(currentMinute * 60), 1000, 1000);
+		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(currentMinute * 60000), 0, progressTimerInterval);
 		updateMinutesText(currentMinute);
 	}
 	
 	private class ProgressDisplayTimerTask extends TimerTask
 	{
-		private int seconds;
+		private int miliseconds;
 		private Handler handler;
 		
-		public ProgressDisplayTimerTask(int seconds)
+		public ProgressDisplayTimerTask(int miliseconds)
 		{
-			this.seconds = seconds;
+			this.miliseconds = miliseconds;
 			this.handler = new Handler();
 		}
 		
 		@Override
 		public void run()
 		{
-			seconds++;
+			miliseconds += progressTimerInterval;
 			handler.post(new Runnable() {
 				public void run() {
-					NowPlaying.this.updateProgressBar(seconds);
+					NowPlaying.this.updateProgressBar(miliseconds);
 				}
 			});
 		}

@@ -13,6 +13,10 @@ public class ProgressUpdateBroadcastReceiver extends BroadcastReceiver {
 		this.listener = listener;
 	}
 	
+	public void unregisterUpdateListener() {
+		this.listener = null;
+	}
+	
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		if(listener != null) {
