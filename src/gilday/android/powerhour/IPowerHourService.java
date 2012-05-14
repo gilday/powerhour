@@ -3,14 +3,6 @@ package gilday.android.powerhour;
 
 public interface IPowerHourService {
 
-	void start();
-	
-	/**
-	 * Sends a command to end the power hour service and kill off its resources.
-	 * Should drop reference to power hour service object after this call
-	 */
-	void stop();
-	
 	/**
 	 * Pause command will change the power hour service's playing state to paused, will 
 	 * end update notification, stop the music, and will pause the timer counting progress

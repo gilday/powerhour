@@ -140,11 +140,16 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 		else{
 			//Log.d(TAG, "Going to get the result and bind to service");
 			PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-			if(playlistRepo.getPlaylistSize() > 0){
+			int playlistSize = playlistRepo.getPlaylistSize();
+			if(playlistSize > 0) {
 				Intent launchServiceIntent = new Intent(this, PowerHourService.class);
-				// Send new intent
-				//Log.d(TAG, "Send list to service");
+				// Send new intent to service
 				startService(launchServiceIntent);
+			}
+			int duration = new PreferenceRepository(getApplicationContext()).getDuration();
+			if(playlistSize < duration) {
+				String message = "You have added only " + playlistRepo.getPlaylistSize() + " songs. Your Power Hour is going to be a little short";
+				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
 			}
 		}
 	}
@@ -164,7 +169,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
             .setTitle("Are you sure you want to end power hour?")
             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                	phService.stop();
+                	stopService(new Intent(getApplicationContext(), PowerHourService.class));
                 	restartApp();
                 }
             })

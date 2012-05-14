@@ -95,21 +95,33 @@ public class PowerHourService extends Service {
 	}
 	
 	@Override
-	public void onStart(Intent intent, int startId){
-		//Log.(TAG, "onStart here");
-		// If this service hasn't been started yet, and the playlist repository is set, start the service
-		// why? if it is started, don't do anything. If the playlist isn't set, can't do anything
+	public int onStartCommand(Intent intent, int flags, int startId)
+	{
 		PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
 		if(playingState == NOT_STARTED && playlistRepo.getPlaylistSize() > 0) {
 			if(playlistRepo.getPlaylistSize() <= 0){
 				throw new ArrayIndexOutOfBoundsException("The song list given to PowerHourService contains no songs!");
 			}
-			int duration = powerHourPrefs.getDuration();
-			if(playlistRepo.getPlaylistSize() < duration){
-				toastError("You have added only " + playlistRepo.getPlaylistSize() + " songs. Your Power Hour is going to be a little short");
-			}
-			doStart();
+			// Start timer
+	    	myTimer = new Timer();
+	    	// reassign rand to reset the random seed
+	    	rand = new Random();
+
+	    	// Create notification in status bar if not already instantiated
+	    	// Instantiate the notification and notification manager if they need to be
+	    	if(notification == null && mNotificationManager == null){
+	    		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);			
+				notification = new Notification();
+				notification.icon = R.drawable.beerstatusbar;
+				notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+				Intent nowPlayingIntent = new Intent(PowerHourService.this, NowPlaying.class);
+				notificationIntent = PendingIntent.getActivity(PowerHourService.this, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+				notification.contentIntent = notificationIntent;
+	    	}
+	    	myTimer.schedule(new SecondTimer(), 0, INTERVAL);
 		}
+		
+		return START_STICKY;
 	}
 	
 	@Override
@@ -237,25 +249,6 @@ public class PowerHourService extends Service {
 		return songId;
 	}
 	
-	void doStart() {
-    	myTimer = new Timer();
-    	// reassign rand to reset the random seed
-    	rand = new Random();
-
-    	// Create notification in status bar if not already instantiated
-    	// Instantiate the notification and notification manager if they need to be
-    	if(notification == null && mNotificationManager == null){
-    		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);			
-			notification = new Notification();
-			notification.icon = R.drawable.beerstatusbar;
-			notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
-			Intent nowPlayingIntent = new Intent(PowerHourService.this, NowPlaying.class);
-			notificationIntent = PendingIntent.getActivity(PowerHourService.this, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-			notification.contentIntent = notificationIntent;
-    	}
-    	myTimer.schedule(new SecondTimer(), 0, INTERVAL);
-	}
-	
 	void postToStatusBar(int songID){
 		PlaylistItem songInfo = MusicUtils.getInfoPack(getApplicationContext(), songID);
 		RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification_layout);
@@ -298,18 +291,10 @@ public class PowerHourService extends Service {
     
     private class PowerHourServiceInterface extends Binder implements IPowerHourService
     {
-	    public void stop() {
-	    	doStop();
-	    }
-	    
 	    public void pause() { 
 	    	doPause();
 	    }
 	    
-	    public void start() {
-	    	doStart();
-	    }
-
 	    public int skip() {
 	    	PlaylistRepository playlistRepo = PlaylistRepository.getInstance(); 
 	    	if(!playlistRepo.isPlayingLastSong()){
