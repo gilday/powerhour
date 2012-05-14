@@ -7,7 +7,7 @@ import gilday.android.powerhour.data.PlaylistRepository;
 import gilday.android.powerhour.data.PowerHour;
 import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.model.PlaylistItem;
-import gilday.android.powerhour.view.NowPlaying;
+import gilday.android.powerhour.view.NowPlayingActivity;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -114,7 +114,7 @@ public class PowerHourService extends Service {
 				notification = new Notification();
 				notification.icon = R.drawable.beerstatusbar;
 				notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
-				Intent nowPlayingIntent = new Intent(PowerHourService.this, NowPlaying.class);
+				Intent nowPlayingIntent = new Intent(PowerHourService.this, NowPlayingActivity.class);
 				notificationIntent = PendingIntent.getActivity(PowerHourService.this, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 				notification.contentIntent = notificationIntent;
 	    	}

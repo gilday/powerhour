@@ -7,7 +7,7 @@
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:description="@string/description">
     <activity android:label="@string/app_name" android:name="gilday.android.powerhour.view.TitleScreen" android:configChanges="orientation" />
     <activity android:name="PowerHourPreferences" />
-    <activity android:name="gilday.android.powerhour.view.NowPlaying" 
+    <activity android:name=".view.NowPlayingActivity" 
     		  android:theme="@android:style/Theme.Black.NoTitleBar" 
     		  android:launchMode="singleTask">
     	<intent-filter>

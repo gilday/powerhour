@@ -19,6 +19,8 @@ import gilday.android.powerhour.data.PlaylistRepository;
 import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.model.PlaylistItem;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
@@ -45,7 +47,7 @@ import android.widget.Toast;
  * @author John Gilday
  *
  */
-public class NowPlaying extends Activity implements IMusicUpdateListener, IProgressUpdateListener{
+public class NowPlayingActivity extends Activity implements IMusicUpdateListener, IProgressUpdateListener {
 	// http://developer.android.com/guide/practices/design/performance.html#avoid_enums
 	private static final String TAG = "NowPlaying";
 	
@@ -78,22 +80,26 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 		minutesText.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/COLLEGE.TTF"));
 		pBar = (ProgressBar)findViewById(R.id.SongProgress);
 		pBar.setMax(10000);
-		
-		// Start the service explicitly. Doesn't matter if it's already running but this ensures
-		// this it is and that it is not bound to the lifecycle of this activity
-		Intent launchServiceIntent = new Intent(this, PowerHourService.class);
-		startService(launchServiceIntent);
 	}
 	
 	@Override
 	protected void onResume(){
 		super.onResume();
-		// Bind to the started service.
-		Intent bindServiceIntent = new Intent(this, PowerHourService.class);
-		// Bind WITHOUT auto create set
-	    if(!bindService(bindServiceIntent, phServiceConnection, 0)){
-	    	Log.e(TAG, "Could not bind to service");
-	    }
+		// See if the service is running
+		if(isPowerHourServiceRunning()) {
+			// Bind to the started service.
+			Intent bindServiceIntent = new Intent(this, PowerHourService.class);
+			// Bind WITHOUT auto create set
+		    if(!bindService(bindServiceIntent, phServiceConnection, 0)){
+		    	Log.e(TAG, "Could not bind to service");
+		    }
+		} else {
+    		// start activity to select the playlist
+        	Intent getList = new Intent(getBaseContext(), TitleScreen.class);
+        	getList.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        	startActivityForResult(getList, 0);
+		}
+
 	    // Register receivers
 		musicUpdateReceiver = new MusicUpdateBroadcastReceiver();
 		musicUpdateReceiver.registerUpdateListener(this);
@@ -107,14 +113,12 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 	@Override
 	protected void onPause(){
 		super.onPause();
-		Log.d(TAG, "onPause");
-		// Unbind from the service b/c this activity is not visible
-		// Hopefully unbinding will save memory and this activity can 
-		// just rebind onStart()
-		phService = null;
-		// unbind service
-		//Log.d(TAG, "onSTOP unbind phService");
-		unbindService(phServiceConnection);
+		
+		if(phService != null) {
+			// Unbind from the service b/c this activity is not visible
+			unbindService(phServiceConnection);
+			phService = null;
+		}
 		// Unbind receivers
 		musicUpdateReceiver.unRegisterUpdateListener();
 		progressUpdateReceiver.unregisterUpdateListener();
@@ -169,8 +173,15 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
             .setTitle("Are you sure you want to end power hour?")
             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
+                	// Unbind
+            		if(phService != null) {
+            			unbindService(phServiceConnection);
+            			phService = null;
+            		}
+            		// Stop service
                 	stopService(new Intent(getApplicationContext(), PowerHourService.class));
-                	restartApp();
+                	// Kill this activity
+                	finish();
                 }
             })
             .setNegativeButton("Cancel", null)
@@ -180,10 +191,21 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
     		skipClick(null);
     		break;
     	case R.id.settings:
-    		launchSettings();
+        	Intent launchPreferencesIntent = new Intent().setClass(this, PowerHourPreferences.class);
+            startActivity(launchPreferencesIntent);
             break;
     	}
         return true;
+    }
+    
+    private boolean isPowerHourServiceRunning() {
+    	ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+    	for(RunningServiceInfo serviceInfo : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+    		if(serviceInfo.service.getClassName().equals(PowerHourService.class.getName())) {
+    			return true;
+    		}
+    	}
+    	return false;
     }
 	
 	private ServiceConnection phServiceConnection = new ServiceConnection() {
@@ -191,62 +213,43 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 		public void onServiceConnected(ComponentName className, IBinder service) {
             phService = (IPowerHourService)service;
             int playing = phService.getPlayingState();
-            if(playing != PowerHourService.NOT_STARTED){
-            	//Log.d(TAG, "Binded to service. PH Started, get progress");
-            	int secondsElapsed = phService.getProgress();
-            	int milisecondsElapsed = secondsElapsed * 1000;
-            	int nowplaying = PlaylistRepository.getInstance().getCurrentSong();
-            	// Q: Why do we have to check if these values are valid?
-            	// A: Due to a race condition, the Service could be "playing"
-            	//    but it could still be loading the first song. This will 
-            	//    check if the player is attempting to play but not actually 
-            	//    playing
-            	if(secondsElapsed > 0 && nowplaying > 0){
-            		//Log.d(TAG, "WARNING: minutesElapsed= " + minutesElapsed + " nowplaying= " + nowplaying);
-            		// First call safeUpdateUI with both arguments to update progress bar
-            		updateNowPlayingSongUI(nowplaying);
-            		updateMinutesText(secondsElapsed / 60);
-            		updateProgressBar(milisecondsElapsed);
-            	}
-            	// Update the pause button if the service is paused. 
-            	// This happens when the phone receives a call and the service pauses itself
-            	if(playing == PowerHourService.PAUSED) {
-            		pauseButton.setImageResource(R.drawable.play);
-            	} else {
-            		pauseButton.setImageResource(R.drawable.pause);
-            		progressUpdateTimer = new Timer();
-            		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(milisecondsElapsed), 0, progressTimerInterval);
-            	}
-            }
-            else{
-            	// If playlist is not set...
-            	if(PlaylistRepository.getInstance().getPlaylistSize() <= 0){
-            		// start activity to select the playlist
-                	Intent getList = new Intent(getBaseContext(), TitleScreen.class);
-                	getList.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                	startActivityForResult(getList, 0);
-            	}
-            }
+        	int secondsElapsed = phService.getProgress();
+        	int milisecondsElapsed = secondsElapsed * 1000;
+        	int nowplaying = PlaylistRepository.getInstance().getCurrentSong();
+        	// Q: Why do we have to check if these values are valid?
+        	// A: Due to a race condition, the Service could be "playing"
+        	//    but it could still be loading the first song. This will 
+        	//    check if the player is attempting to play but not actually 
+        	//    playing
+        	if(secondsElapsed > 0 && nowplaying > 0){
+        		//Log.d(TAG, "WARNING: minutesElapsed= " + minutesElapsed + " nowplaying= " + nowplaying);
+        		// First call safeUpdateUI with both arguments to update progress bar
+        		updateNowPlayingSongUI(nowplaying);
+        		updateMinutesText(secondsElapsed / 60);
+        		updateProgressBar(milisecondsElapsed);
+        	}
+        	// Update the pause button if the service is paused. 
+        	// This happens when the phone receives a call and the service pauses itself
+        	if(playing == PowerHourService.PAUSED) {
+        		pauseButton.setImageResource(R.drawable.play);
+        	} else {
+        		pauseButton.setImageResource(R.drawable.pause);
+        		progressUpdateTimer = new Timer();
+        		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(milisecondsElapsed), 0, progressTimerInterval);
+        	}
         }
 
         public void onServiceDisconnected(ComponentName className) {
-        	new AlertDialog.Builder(NowPlaying.this)
+        	new AlertDialog.Builder(NowPlayingActivity.this)
 	  	      .setMessage(getString(R.string.completed))
 	  	      .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 	  	    	  public void onClick(DialogInterface inteface, int button){
-	  	    		  restartApp();
+	  	    		  finish();
 	  	    	  }
 	  	      })
   	      .show();
         }
     };
-    
-    private void restartApp(){
-    	phService = null;
-		Intent restart = new Intent(this, NowPlaying.class);
-		startActivity(restart);
-		finish();
-    }
     
     public void pauseClick(View v) {
 		phService.pause();
@@ -274,11 +277,6 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
     public void playlistClick(View v) {
     	Intent launchPlaylistEditor = new Intent().setClass(this, PlaylistEditor.class);
     	startActivity(launchPlaylistEditor);
-    }
-    
-    public void launchSettings() {
-    	Intent launchPreferencesIntent = new Intent().setClass(this, PowerHourPreferences.class);
-        startActivity(launchPreferencesIntent);
     }
     
     void updateNowPlayingSongUI(int id){
@@ -368,7 +366,7 @@ public class NowPlaying extends Activity implements IMusicUpdateListener, IProgr
 			miliseconds += progressTimerInterval;
 			handler.post(new Runnable() {
 				public void run() {
-					NowPlaying.this.updateProgressBar(miliseconds);
+					NowPlayingActivity.this.updateProgressBar(miliseconds);
 				}
 			});
 		}
