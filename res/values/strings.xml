@@ -5,6 +5,9 @@
 <string name="title">POWER HOUR PRO</string>
 <string name="rangepreferencetitle">Select Offset</string>
 <string name="rangepreferencesummary">How far in should each song start?</string>
+<string name="error_noSongsOnDevice">There are no songs on this device! Cannot start Power Hour</string>
+<string name="error_noSongsOnPlaylist">This playlist is empty! Cannot start Power Hour</string>
+<string name="dialog_acknowledgeButton">OK</string>
 <string name="PlaylistBrowserTitle">Pick a playlist</string>
 <string name="PlaylistEditorTitle">Edit current playlist</string>
 <string name="completed">Power Hour complete- Now go out but don\'t drive!</string>

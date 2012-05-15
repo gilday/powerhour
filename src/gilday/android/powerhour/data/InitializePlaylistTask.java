@@ -83,6 +83,9 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 	private void setSongsToImportCount() 
 	{
 		songsToImportCount = importCursor.getCount();
+		if(songsToImportCount <= 0) {
+			throw new IllegalStateException("Cannot initialize a power hour with no songs to import");
+		}
 		PreferenceRepository prefsRepo = new PreferenceRepository(context);
 		if(songsToImportCount > (QUICKLOAD_THRESHOLD * 2) && prefsRepo.getQuickLoad()) 
 		{

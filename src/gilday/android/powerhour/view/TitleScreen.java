@@ -6,8 +6,10 @@ import gilday.android.powerhour.data.InitializePlaylistTask;
 import gilday.android.powerhour.data.Keys;
 import gilday.android.powerhour.data.PlaylistRepository;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Typeface;
@@ -20,12 +22,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class TitleScreen extends Activity {
 
 	private static final String TAG = "TitleScreenActivity";
-	private Button doitnow, startPlayList;
+	private Button playNowButton, startPlayListButton;
 	
     /** Called when the activity is first created. */
     @Override
@@ -35,16 +36,16 @@ public class TitleScreen extends Activity {
         TextView tv = (TextView)findViewById(R.id.main_title);
         tv.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/COLLEGE.TTF"));
         
-        doitnow = (Button)findViewById(R.id.playNowButton);
-        startPlayList = (Button)findViewById(R.id.selectPlaylistButton);
+        playNowButton = (Button)findViewById(R.id.playNowButton);
+        startPlayListButton = (Button)findViewById(R.id.selectPlaylistButton);
         
-        doitnow.setOnClickListener(new OnClickListener() {
-                public void onClick(View v) {
-                    startFromRandom();
-                }
-            });
+        playNowButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                startFromRandom();
+            }
+        });
         
-        startPlayList.setOnClickListener(new OnClickListener(){
+        startPlayListButton.setOnClickListener(new OnClickListener(){
         	public void onClick(View v){
         		startFromPlaylist();
         	}
@@ -62,7 +63,8 @@ public class TitleScreen extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
     	// There is only one option on this menu and it's the settings 
     	// list. Launch preferences
-    	launchPreferences();
+        Intent launchPreferencesIntent = new Intent().setClass(this, PowerHourPreferences.class);
+        startActivity(launchPreferencesIntent);
         return true;
     }
     
@@ -74,11 +76,6 @@ public class TitleScreen extends Activity {
     	// screen is rotated
     }
 
-	private void launchPreferences() {
-        Intent launchPreferencesIntent = new Intent().setClass(this, PowerHourPreferences.class);
-        startActivity(launchPreferencesIntent);
-	}
-	
 	private void startFromPlaylist(){
 		/*
 		 * TODO
@@ -101,7 +98,7 @@ public class TitleScreen extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		if(resultCode == RESULT_CANCELED){
-			Log.v(TAG, "Result is a cancel! Finish now");
+			Log.v(TAG, "Result is a cancel! Do nothing, wait for user to do something useful");
 		}
 		else{
 			// Get playlist ID from returning activity
@@ -112,10 +109,9 @@ public class TitleScreen extends Activity {
 			try {
 				MyInitializePlaylistTask task = new MyInitializePlaylistTask(this, id);
 				task.execute((Void[])null);
-			} catch (IllegalArgumentException ie) {
-				// So there were no songs in that playlist and there was an exception thrown
-				Toast.makeText(this, "This playlist is empty! Cannot start Power Hour", Toast.LENGTH_SHORT).show();
-				return;
+			} catch (IllegalStateException ie) {
+				// So there were no songs in that playlist and so there was an exception thrown
+				displayEmptyPlaylistError(getString(R.string.error_noSongsOnPlaylist));
 			}
 		}
 	}
@@ -128,12 +124,22 @@ public class TitleScreen extends Activity {
 		try {
 			MyInitializePlaylistTask task = new MyInitializePlaylistTask(this);
 			task.execute((Void[])null);
-		} catch (IllegalArgumentException ie) {
-			// So there's apparently no songs on the SD card
-			Log.e(TAG, ie.getMessage());
-			Toast.makeText(this, "There are no songs on your SD card! Cannot start Power Hour.", Toast.LENGTH_SHORT).show();
-			return;
+		} catch (IllegalStateException ie) {
+			// Could not find any songs so there was an exception thrown
+			displayEmptyPlaylistError(getString(R.string.error_noSongsOnDevice));
 		}
+	}
+	
+	private void displayEmptyPlaylistError(String message) {
+		// So there's apparently no songs on the SD card
+    	new AlertDialog.Builder(this)
+  	      .setMessage(message)
+  	      .setPositiveButton(getString(R.string.dialog_acknowledgeButton), new DialogInterface.OnClickListener() {
+  	    	  public void onClick(DialogInterface inteface, int button){
+  	    		  // Do nothing, just want user to acknowledge
+  	    	  }
+  	      })
+  	      .show();
 	}
 	
 	/**

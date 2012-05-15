@@ -138,21 +138,19 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if(resultCode == RESULT_CANCELED){
-			//Log.v(TAG, "Result is a cancel! Finish now");
+			// Log.v(TAG, "Result is a cancel! Finish now");
 			finish();
 		}
 		else{
-			//Log.d(TAG, "Going to get the result and bind to service");
+			// Log.v(TAG, "Going to get the result and bind to service");
+			Intent launchServiceIntent = new Intent(this, PowerHourService.class);
+			// Send new intent to service
+			startService(launchServiceIntent);
 			PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
 			int playlistSize = playlistRepo.getPlaylistSize();
-			if(playlistSize > 0) {
-				Intent launchServiceIntent = new Intent(this, PowerHourService.class);
-				// Send new intent to service
-				startService(launchServiceIntent);
-			}
 			int duration = new PreferenceRepository(getApplicationContext()).getDuration();
 			if(playlistSize < duration) {
-				String message = "You have added only " + playlistRepo.getPlaylistSize() + " songs. Your Power Hour is going to be a little short";
+				String message = "You have added only " + playlistSize + " songs. Your Power Hour is going to be a little short";
 				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
 			}
 		}
