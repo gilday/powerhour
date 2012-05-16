@@ -11,6 +11,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.DatabaseUtils.InsertHelper;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -21,7 +22,7 @@ import android.text.TextUtils;
  * @author jgilday
  *
  */
-public class PlaylistProvider extends ContentProvider {
+public class CurrentPlaylistProvider extends ContentProvider {
 
 	private static final UriMatcher URI_MATCHER;
 	private static final int NOW_PLAYING = 1;
@@ -77,6 +78,57 @@ public class PlaylistProvider extends ContentProvider {
 		// Following example on this next line
 		cursor.setNotificationUri(getContext().getContentResolver(), uri);
 		return cursor;
+	}
+	
+	@Override
+	public int bulkInsert(Uri uri, ContentValues[] values) {
+		
+		// Argument checking
+		if(URI_MATCHER.match(uri) != NOW_PLAYING) {
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
+		if(values == null) {
+			throw new IllegalArgumentException("Cannot bulk insert null list");
+		}
+		
+		SQLiteDatabase writableDb = dbHelper.getWritableDatabase();
+		InsertHelper ih = new InsertHelper(writableDb, NowPlaying.TABLE);
+		int insertedCount = 0;
+		
+        final int idColumn = ih.getColumnIndex(NowPlaying._ID);
+        final int artistColumn = ih.getColumnIndex(NowPlaying.ARTIST);
+        final int albumColumn = ih.getColumnIndex(NowPlaying.ALBUM);
+        final int titleColumn = ih.getColumnIndex(NowPlaying.TITLE);
+        final int omitColumn = ih.getColumnIndex(NowPlaying.OMIT);
+        final int playedColumn = ih.getColumnIndex(NowPlaying.PLAYED);
+        final int positionColumn = ih.getColumnIndex(NowPlaying.POSITION);
+        final int shufflePositionColumn = ih.getColumnIndex(NowPlaying.SHUFFLE_POSITION);
+        
+        writableDb.beginTransaction();
+        try {
+	        for(int i = 0; i < values.length; i++) {
+	        	ih.prepareForInsert();
+	        	
+	        	ih.bind(idColumn, values[i].getAsString(NowPlaying._ID));
+	        	ih.bind(artistColumn, values[i].getAsString(NowPlaying.ARTIST));
+	        	ih.bind(albumColumn, values[i].getAsString(NowPlaying.ALBUM));
+	        	ih.bind(titleColumn, values[i].getAsString(NowPlaying.TITLE));
+	        	ih.bind(omitColumn, ((Number)values[i].get(NowPlaying.OMIT)).intValue());
+	        	ih.bind(playedColumn, ((Number) values[i].get(NowPlaying.PLAYED)).intValue());
+	        	ih.bind(positionColumn, ((Number) values[i].get(NowPlaying.POSITION)).intValue());
+	        	ih.bind(shufflePositionColumn, ((Number) values[i].get(NowPlaying.SHUFFLE_POSITION)).intValue());
+	        	
+	        	ih.execute();
+	        }
+	        writableDb.setTransactionSuccessful();
+	        insertedCount = values.length;
+        } finally { 
+        	ih.close();
+        	writableDb.endTransaction();
+        }
+        
+        getContext().getContentResolver().notifyChange(uri, null);
+        return insertedCount;
 	}
 	
 	/* (non-Javadoc)
