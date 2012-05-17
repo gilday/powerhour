@@ -27,4 +27,9 @@ public interface IPowerHourService {
 	 * @return number of seconds that have passed
 	 */
 	int getProgress();
+	
+	/**
+	 * @return the ID of the song that is playing now
+	 */
+	int getCurrentSong();
 }

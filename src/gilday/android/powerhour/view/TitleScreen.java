@@ -4,7 +4,7 @@ import gilday.android.powerhour.PowerHourPreferences;
 import gilday.android.powerhour.R;
 import gilday.android.powerhour.data.InitializePlaylistTask;
 import gilday.android.powerhour.data.Keys;
-import gilday.android.powerhour.data.PlaylistRepository;
+import gilday.android.powerhour.data.PreferenceRepository;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class TitleScreen extends Activity {
 
@@ -103,9 +104,6 @@ public class TitleScreen extends Activity {
 		else{
 			// Get playlist ID from returning activity
 			int id = data.getIntExtra(Keys.PLAYLIST_ID_KEY, 0);
-			// Set PlaylistRepository
-			PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-			playlistRepo.init(getApplicationContext());
 			try {
 				MyInitializePlaylistTask task = new MyInitializePlaylistTask(this, id);
 				task.execute((Void[])null);
@@ -118,9 +116,6 @@ public class TitleScreen extends Activity {
 	
 	private void startFromRandom(){
 		// TODO: Set shuffle preference to true if this is truely "start from random"
-		// Tell PlaylistRepository to set the playlist to all songs
-		PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-		playlistRepo.init(getApplicationContext());
 		try {
 			MyInitializePlaylistTask task = new MyInitializePlaylistTask(this);
 			task.execute((Void[])null);
@@ -178,9 +173,16 @@ public class TitleScreen extends Activity {
 		}
 		
 		@Override
-		public void onPostExecute(Void result) {
+		public void onPostExecute(Integer importedSongsCount) {
 			progressDialog.dismiss();
 			Intent respondIntent = new Intent();
+			// if importedSongsCount < duration ...
+			int duration = new PreferenceRepository(context).getDuration();
+			if(importedSongsCount < duration) {
+				// ... then report that the power hour will be short
+				String message = "You have added only " + importedSongsCount + " songs. Your Power Hour is going to be a little short";
+				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+			}
 			TitleScreen.this.setResult(RESULT_OK, respondIntent);
 			TitleScreen.this.finish();
 		}

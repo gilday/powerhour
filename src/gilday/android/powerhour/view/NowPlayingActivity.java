@@ -3,9 +3,6 @@
  */
 package gilday.android.powerhour.view;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import gilday.android.powerhour.IMusicUpdateListener;
 import gilday.android.powerhour.IPowerHourService;
 import gilday.android.powerhour.IProgressUpdateListener;
@@ -15,9 +12,12 @@ import gilday.android.powerhour.PowerHourPreferences;
 import gilday.android.powerhour.PowerHourService;
 import gilday.android.powerhour.ProgressUpdateBroadcastReceiver;
 import gilday.android.powerhour.R;
-import gilday.android.powerhour.data.PlaylistRepository;
 import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.model.PlaylistItem;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
@@ -146,13 +146,6 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 			Intent launchServiceIntent = new Intent(this, PowerHourService.class);
 			// Send new intent to service
 			startService(launchServiceIntent);
-			PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-			int playlistSize = playlistRepo.getPlaylistSize();
-			int duration = new PreferenceRepository(getApplicationContext()).getDuration();
-			if(playlistSize < duration) {
-				String message = "You have added only " + playlistSize + " songs. Your Power Hour is going to be a little short";
-				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-			}
 		}
 	}
 	
@@ -213,7 +206,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
             int playing = phService.getPlayingState();
         	int secondsElapsed = phService.getProgress();
         	int milisecondsElapsed = secondsElapsed * 1000;
-        	int nowplaying = PlaylistRepository.getInstance().getCurrentSong();
+        	int nowplaying = phService.getCurrentSong();
         	// Q: Why do we have to check if these values are valid?
         	// A: Due to a race condition, the Service could be "playing"
         	//    but it could still be loading the first song. This will 

@@ -3,8 +3,6 @@
  */
 package gilday.android.powerhour;
 
-import gilday.android.powerhour.data.PlaylistRepository;
-import gilday.android.powerhour.data.PowerHour;
 import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.model.PlaylistItem;
 import gilday.android.powerhour.view.NowPlayingActivity;
@@ -19,12 +17,9 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -63,6 +58,7 @@ public class PowerHourService extends Service {
 	Object splayerLock = new Object();
 	Handler mHandler = new Handler();
 	private PreferenceRepository powerHourPrefs;
+	private NowPlayingPlaylistManager playlistManager;
 	
 	// Notification objects
 	Notification notification;
@@ -76,6 +72,7 @@ public class PowerHourService extends Service {
 		mplayer = new MediaPlayer();
 		soundClipPlayer = new MediaPlayer();
 		powerHourPrefs = new PreferenceRepository(this);
+		playlistManager = new NowPlayingPlaylistManager(this);
 		
 		TelephonyManager tm = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);
 		tm.listen(new PhoneStateListener(){
@@ -97,9 +94,8 @@ public class PowerHourService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
-		PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-		if(playingState == NOT_STARTED && playlistRepo.getPlaylistSize() > 0) {
-			if(playlistRepo.getPlaylistSize() <= 0){
+		if(playingState == NOT_STARTED && playlistManager.getPlaylistSize() > 0) {
+			if(playlistManager.getPlaylistSize() <= 0){
 				throw new ArrayIndexOutOfBoundsException("The song list given to PowerHourService contains no songs!");
 			}
 			// Start timer
@@ -151,7 +147,7 @@ public class PowerHourService extends Service {
 		if(mNotificationManager != null){
 			mNotificationManager.cancel(R.layout.custom_notification_layout);
 		}
-		PlaylistRepository.getInstance().clearPlaylist();
+		playlistManager.clearPlaylist();
 	}
 
 	/**
@@ -159,21 +155,9 @@ public class PowerHourService extends Service {
 	 * @return the id (in terms of the Android MusicProvider) of the song that was just loaded
 	 */
 	int loadNextSong() {
-		PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-		boolean shuffle = powerHourPrefs.isShuffle();
-		
-		// Set the current song as 'played'
-		int currentSong = playlistRepo.getCurrentSong();
-		if(currentSong >= 0) {
-			ContentValues values = new ContentValues();
-			values.put(PowerHour.NowPlaying.PLAYED, true);
-			Uri updateUri = ContentUris.withAppendedId(PowerHour.NowPlaying.CONTENT_URI, currentSong);
-			getContentResolver().update(updateUri, values, null, null);
-		}
-		
 		// Do expensive work before we reset the media player so we don't "skip a beat" bahahaha
 		// Advance to next song
-		int songId = playlistRepo.getNextSong(shuffle);
+		int songId = playlistManager.advancePlaylist();
 		if(songId == -1) {
 			return -1;
 		}
@@ -296,8 +280,7 @@ public class PowerHourService extends Service {
 	    }
 	    
 	    public int skip() {
-	    	PlaylistRepository playlistRepo = PlaylistRepository.getInstance(); 
-	    	if(!playlistRepo.isPlayingLastSong()){
+	    	if(!playlistManager.isPlayingLastSong()){
 	    		return loadNextSong();
 	    	} else {
 	    		return -1;
@@ -311,6 +294,10 @@ public class PowerHourService extends Service {
 	    public int getProgress(){
 	    	return seconds;
 	    }
+
+		public int getCurrentSong() {
+			return playlistManager.getCurrentSong();
+		}
     }
 
     private class SecondTimer extends TimerTask{
@@ -324,8 +311,7 @@ public class PowerHourService extends Service {
 				// If the power hour is over, or if the list is too small and there are no more songs to load,
 				// end the power hour
 				int duration = powerHourPrefs.getDuration();
-				PlaylistRepository playlistRepo = PlaylistRepository.getInstance();
-				if(minutes >= duration || playlistRepo.isPlayingLastSong()){
+				if(minutes >= duration || playlistManager.isPlayingLastSong()){
 					// Tear down
 					stopSelf();
 					return;

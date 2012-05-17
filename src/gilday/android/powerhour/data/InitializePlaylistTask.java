@@ -22,7 +22,7 @@ import android.util.Log;
  * @author jgilday
  *
  */
-public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void> {
+public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Integer> {
 	private Cursor importCursor;
 	private static final int QUICKLOAD_THRESHOLD = 180;
 	protected Context context;
@@ -99,7 +99,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
 	 * Hour playlist table has a unique schema with columns such as "omit".
 	 */
 	@Override
-	protected Void doInBackground(Void... params) {
+	protected Integer doInBackground(Void... params) {
 		final int sourcePlaylistSize = importCursor.getCount();
 		if(importCursor == null || sourcePlaylistSize <= 0) {
 			throw new IllegalArgumentException("There are no songs in this playlist");
@@ -170,8 +170,8 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Void>
         importCursor.close();
         
         // Now write everything to the content provider with a bulk insert
-        context.getContentResolver().bulkInsert(NowPlaying.CONTENT_URI, values);
-		return null;
+        int importedCount = context.getContentResolver().bulkInsert(NowPlaying.CONTENT_URI, values);
+		return importedCount;
 	}
 	
 	/**
