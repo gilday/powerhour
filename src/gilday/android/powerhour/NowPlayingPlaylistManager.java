@@ -64,9 +64,8 @@ class NowPlayingPlaylistManager {
 			// return -1 to indicate this
 			return -1;
 		}
-		int songId = -1;
 
-		songId = cursor.getInt(cursor.getColumnIndex(NowPlaying._ID));
+		int songId = cursor.getInt(cursor.getColumnIndex(NowPlaying._ID));
 		cursor.close();
 		return songId;
 	}

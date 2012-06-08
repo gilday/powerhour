@@ -96,12 +96,10 @@ public class AudioFilePreference extends Preference {
 		getContext().startActivity(launchHiddenActivity);
 	}
 	
-	TextView fileNameTextView;
-	View myView;
+	private TextView fileNameTextView;
 	@Override
 	protected void onBindView(View v){
 		super.onBindView(v);
-		myView = v;
 		TextView title = (TextView) v.findViewById(R.id.AudioPrefTitle);
 		title.setText(getTitle());
 		fileNameTextView = (TextView) v.findViewById(R.id.CustomAudioFileName);
@@ -112,9 +110,7 @@ public class AudioFilePreference extends Preference {
 	@Override
 	protected Object onGetDefaultValue(TypedArray ta, int index) {
 
-		String dValue = (String) ta.getString(index);
-
-		return dValue;
+        return ta.getString(index);
 	}
 
 	@Override

@@ -89,7 +89,7 @@ public class RangePreference extends Preference implements
 	@Override
 	protected Object onGetDefaultValue(TypedArray ta, int index) {
 
-		int dValue = (int) ta.getInt(index, 50);
+		int dValue = ta.getInt(index, 50);
 
 		return validateValue(dValue);
 	}

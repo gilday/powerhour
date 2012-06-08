@@ -106,20 +106,20 @@ public class CurrentPlaylistProvider extends ContentProvider {
         
         writableDb.beginTransaction();
         try {
-	        for(int i = 0; i < values.length; i++) {
-	        	ih.prepareForInsert();
-	        	
-	        	ih.bind(idColumn, values[i].getAsString(NowPlaying._ID));
-	        	ih.bind(artistColumn, values[i].getAsString(NowPlaying.ARTIST));
-	        	ih.bind(albumColumn, values[i].getAsString(NowPlaying.ALBUM));
-	        	ih.bind(titleColumn, values[i].getAsString(NowPlaying.TITLE));
-	        	ih.bind(omitColumn, ((Number)values[i].get(NowPlaying.OMIT)).intValue());
-	        	ih.bind(playedColumn, ((Number) values[i].get(NowPlaying.PLAYED)).intValue());
-	        	ih.bind(positionColumn, ((Number) values[i].get(NowPlaying.POSITION)).intValue());
-	        	ih.bind(shufflePositionColumn, ((Number) values[i].get(NowPlaying.SHUFFLE_POSITION)).intValue());
-	        	
-	        	ih.execute();
-	        }
+            for (ContentValues value : values) {
+                ih.prepareForInsert();
+
+                ih.bind(idColumn, value.getAsString(NowPlaying._ID));
+                ih.bind(artistColumn, value.getAsString(NowPlaying.ARTIST));
+                ih.bind(albumColumn, value.getAsString(NowPlaying.ALBUM));
+                ih.bind(titleColumn, value.getAsString(NowPlaying.TITLE));
+                ih.bind(omitColumn, ((Number) value.get(NowPlaying.OMIT)).intValue());
+                ih.bind(playedColumn, ((Number) value.get(NowPlaying.PLAYED)).intValue());
+                ih.bind(positionColumn, ((Number) value.get(NowPlaying.POSITION)).intValue());
+                ih.bind(shufflePositionColumn, ((Number) value.get(NowPlaying.SHUFFLE_POSITION)).intValue());
+
+                ih.execute();
+            }
 	        writableDb.setTransactionSuccessful();
 	        insertedCount = values.length;
         } finally { 

@@ -15,3 +15,9 @@ gen/
 # Local configuration files (sdk path, etc)
 local.properties
 
+# Intellij files
+*.iml
+*.ipr
+*.iws
+.idea/
+

@@ -4,25 +4,35 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.LinkedList;
+
 public class ProgressUpdateBroadcastReceiver extends BroadcastReceiver {
 
-	private IProgressUpdateListener listener;
+	private LinkedList<IProgressUpdateListener> listeners = new LinkedList<IProgressUpdateListener>();
 	
-	public void registerUpdateListener(IProgressUpdateListener listener)
-	{
-		this.listener = listener;
-	}
+	public ProgressUpdateBroadcastReceiver(IProgressUpdateListener... listener)
+    {
+        listeners = new LinkedList<IProgressUpdateListener>();
+        for(IProgressUpdateListener l : listener) {
+            listeners.add(l);
+        }
+    }
 	
 	public void unregisterUpdateListener() {
-		this.listener = null;
+        for(IProgressUpdateListener listener : listeners){
+            if(listener instanceof IDisposable) {
+                ((IDisposable) listener).dispose();
+            }
+        }
+		listeners = null;
 	}
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if(listener != null) {
-			int minute = intent.getExtras().getInt(PowerHourService.PROGRESS);
-			listener.onProgressUpdate(minute);
-		}
+        int minute = intent.getExtras().getInt(PowerHourService.PROGRESS);
+        for(IProgressUpdateListener listener : listeners) {
+            listener.onProgressUpdate(minute);
+        }
 	}
 
 }

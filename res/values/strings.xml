@@ -16,4 +16,5 @@
 <string name="omit_toggle_off">Skip</string>
 <string name="quit_confirmation">Are you sure you want to end Power Hour?</string>
 <string name="dialog_cancel">Cancel</string>
+<string name="notification_drink">Drinks</string>
 </resources>

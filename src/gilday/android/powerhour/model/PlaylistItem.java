@@ -15,13 +15,4 @@ public class PlaylistItem {
 	public String song;
 	public Bitmap art;
     public int id;
-	public boolean omit = false;
-	
-	public PlaylistItem() {}
-
-	public PlaylistItem(String artist, String album, String song){
-		this.artist = artist;
-		this.album = album;
-		this.song = song;
-	}
 }

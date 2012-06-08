@@ -101,10 +101,8 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 		}
 
 	    // Register receivers
-		musicUpdateReceiver = new MusicUpdateBroadcastReceiver();
-		musicUpdateReceiver.registerUpdateListener(this);
-		progressUpdateReceiver = new ProgressUpdateBroadcastReceiver();
-		progressUpdateReceiver.registerUpdateListener(this);
+		musicUpdateReceiver = new MusicUpdateBroadcastReceiver(this);
+		progressUpdateReceiver = new ProgressUpdateBroadcastReceiver(this);
 		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
 		lbm.registerReceiver(musicUpdateReceiver, new IntentFilter(PowerHourService.MUSIC_UPDATE_BROADCAST));
 		lbm.registerReceiver(progressUpdateReceiver, new IntentFilter(PowerHourService.PROGRESS_UPDATE_BROADCAST));

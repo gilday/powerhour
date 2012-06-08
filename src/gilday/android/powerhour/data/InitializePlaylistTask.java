@@ -205,7 +205,7 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Integ
 		
 		public QuickLoadImportCursorIterator() {
     		int importSize = importCursor.getCount();
-    		bucketSize = (int) (importSize / QUICKLOAD_THRESHOLD);
+    		bucketSize = importSize / QUICKLOAD_THRESHOLD;
     		rand = new Random();
 		}
 

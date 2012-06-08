@@ -86,7 +86,7 @@ public class MusicUtils {
 	 * @param album_id
 	 * @return
 	 */
-	public static Bitmap getArtwork(Context context, int album_id){
+	private static Bitmap getArtwork(Context context, int album_id){
         ContentResolver res = context.getContentResolver();
         Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
         if (uri != null) {

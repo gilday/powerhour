@@ -35,9 +35,8 @@ public class MyPlaylistBrowserActivity extends Activity {
 	// List of playlists in the form of key,value property mappings. Used for SimpleAdapter
 	private ArrayList<HashMap<String,String>> playlists = new ArrayList<HashMap<String,String>>();
 	private SimpleAdapter myAdapter;
-	private ListView playlist_listView;
-	
-	@Override
+
+    @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setTitle(getString(R.string.PlaylistBrowserTitle));
@@ -52,22 +51,22 @@ public class MyPlaylistBrowserActivity extends Activity {
 				loadPlaylists(true);
 			}
 		});
-		
-		playlist_listView = (ListView)findViewById(R.id.playlist_ListView);
+
+        ListView playlist_listView = (ListView) findViewById(R.id.playlist_ListView);
 		myAdapter = new SimpleAdapter(this, playlists, R.layout.playlist_item, 
 				new String[] { NAME, SIZE }, new int[] { R.id.playlist_name, R.id.playlist_size });
 		playlist_listView.setAdapter(myAdapter);
 		
 		// When a playlist is selected, get its ID from the hashmap
 		playlist_listView.setOnItemClickListener(new ListView.OnItemClickListener() {
-			public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
-				Intent respondIntent = new Intent();
-				int playlistId = Integer.parseInt(playlists.get(position).get(ID));
-			    respondIntent.putExtra(Keys.PLAYLIST_ID_KEY, playlistId);
-			    setResult(RESULT_OK, respondIntent);
-			    finish();
-			}
-		});
+            public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
+                Intent respondIntent = new Intent();
+                int playlistId = Integer.parseInt(playlists.get(position).get(ID));
+                respondIntent.putExtra(Keys.PLAYLIST_ID_KEY, playlistId);
+                setResult(RESULT_OK, respondIntent);
+                finish();
+            }
+        });
 		// Load all playlists at first
 		loadPlaylists(false);
 	}

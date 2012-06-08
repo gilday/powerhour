@@ -3,22 +3,9 @@
  */
 package gilday.android.powerhour;
 
-import gilday.android.powerhour.data.PreferenceRepository;
-import gilday.android.powerhour.model.PlaylistItem;
-import gilday.android.powerhour.view.NowPlayingActivity;
-
-import java.io.FileDescriptor;
-import java.io.IOException;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
@@ -27,8 +14,13 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.RemoteViews;
 import android.widget.Toast;
+import gilday.android.powerhour.data.PreferenceRepository;
+
+import java.io.IOException;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @author John Gilday
@@ -40,7 +32,6 @@ public class PowerHourService extends Service {
 	public static final int PAUSED = 2;
 	public static final int INTERVAL = 1000;
 	// public static final int INTERVAL = 200;
-	public static final int PAUSE_ACTION_ID = 2;
 	public static final String MUSIC_UPDATE_BROADCAST = "com.johnathangilday.powerhour.musicupdatebroadcast";
 	public static final String PROGRESS_UPDATE_BROADCAST = "com.johnathangilday.powerhour.progressupdatebroadcast";
 	public static final String SONGID = "songid";
@@ -49,28 +40,21 @@ public class PowerHourService extends Service {
 	private static final String TAG = "PH_Service";
 	
 	private MediaPlayer mplayer;
-	private MediaPlayer soundClipPlayer;
 	private Timer myTimer;
 	private int seconds = -1;
 	private Random rand;
 	private int playingState = NOT_STARTED;
-	Object mplayerLock = new Object();
-	Object splayerLock = new Object();
+	final Object mplayerLock = new Object();
 	Handler mHandler = new Handler();
 	private PreferenceRepository powerHourPrefs;
 	private NowPlayingPlaylistManager playlistManager;
-	
-	// Notification objects
-	Notification notification;
-	NotificationManager mNotificationManager;
-	PendingIntent notificationIntent;
-	static final int NOTIFICATION_ID = 1;
+    private MusicUpdateBroadcastReceiver musicUpdateBroadcastReceiver;
+    private ProgressUpdateBroadcastReceiver progressUpdateBroadcastReceiver;
 	
 	@Override
 	public void onCreate(){
 		super.onCreate();
 		mplayer = new MediaPlayer();
-		soundClipPlayer = new MediaPlayer();
 		powerHourPrefs = new PreferenceRepository(this);
 		playlistManager = new NowPlayingPlaylistManager(this);
 		
@@ -89,6 +73,16 @@ public class PowerHourService extends Service {
 				}
 			}
 		}, PhoneStateListener.LISTEN_CALL_STATE);
+
+        // Register the NotificationSoundClipPlayer so it will play the
+        // alert clip when the service broadcasts a progress advance
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
+        NotificationSoundClipPlayer drinkNotificationPlayer = new NotificationSoundClipPlayer(getApplicationContext());
+        OngoingNotificationUpdater drinkNotificationUpdater = new OngoingNotificationUpdater(getApplicationContext());
+        progressUpdateBroadcastReceiver = new ProgressUpdateBroadcastReceiver(drinkNotificationPlayer, drinkNotificationUpdater);
+        musicUpdateBroadcastReceiver = new MusicUpdateBroadcastReceiver(drinkNotificationUpdater);
+        lbm.registerReceiver(progressUpdateBroadcastReceiver, new IntentFilter(PowerHourService.PROGRESS_UPDATE_BROADCAST));
+		lbm.registerReceiver(musicUpdateBroadcastReceiver, new IntentFilter(PowerHourService.MUSIC_UPDATE_BROADCAST));
 	}
 	
 	@Override
@@ -103,17 +97,6 @@ public class PowerHourService extends Service {
 	    	// reassign rand to reset the random seed
 	    	rand = new Random();
 
-	    	// Create notification in status bar if not already instantiated
-	    	// Instantiate the notification and notification manager if they need to be
-	    	if(notification == null && mNotificationManager == null){
-	    		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);			
-				notification = new Notification();
-				notification.icon = R.drawable.beerstatusbar;
-				notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
-				Intent nowPlayingIntent = new Intent(PowerHourService.this, NowPlayingActivity.class);
-				notificationIntent = PendingIntent.getActivity(PowerHourService.this, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-				notification.contentIntent = notificationIntent;
-	    	}
 	    	myTimer.schedule(new SecondTimer(), 0, INTERVAL);
 		}
 		
@@ -133,20 +116,19 @@ public class PowerHourService extends Service {
 		if(playingState != PowerHourService.NOT_STARTED){
 			playingState = PowerHourService.NOT_STARTED;
 			synchronized(mplayerLock){
-		    	mplayer.stop();
+				mplayer.stop();
 		    	mplayer.release();
 		    	mplayer = null;
 			}
-			synchronized(splayerLock){
-				soundClipPlayer.stop();
-				soundClipPlayer.release();
-				soundClipPlayer = null;
-			}
 		}
-		// Clear notification
-		if(mNotificationManager != null){
-			mNotificationManager.cancel(R.layout.custom_notification_layout);
-		}
+        // Clear progressUpdateReceiver
+        progressUpdateBroadcastReceiver.unregisterUpdateListener();
+        musicUpdateBroadcastReceiver.unRegisterUpdateListener();
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
+        lbm.unregisterReceiver(progressUpdateBroadcastReceiver);
+        lbm.unregisterReceiver(musicUpdateBroadcastReceiver);
+
+        // Clear playlist
 		playlistManager.clearPlaylist();
 	}
 
@@ -222,8 +204,6 @@ public class PowerHourService extends Service {
 			Log.d(TAG, "Offset: " + offset + ".  Current pos: " + mplayer.getCurrentPosition());
 			mplayer.seekTo(msOffset);			
 			
-			// Post to status bar
-			postToStatusBar(songId);
     		// Send update
     		Intent intent = new Intent();
     		intent.putExtra(PowerHourService.SONGID, songId);
@@ -231,17 +211,6 @@ public class PowerHourService extends Service {
     		LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 		}
 		return songId;
-	}
-	
-	void postToStatusBar(int songID){
-		PlaylistItem songInfo = MusicUtils.getInfoPack(getApplicationContext(), songID);
-		RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification_layout);
-		contentView.setTextViewText(R.id.notificationSongTitle, songInfo.song);
-		contentView.setTextViewText(R.id.notificationArtist, songInfo.artist);
-		contentView.setTextViewText(R.id.notificationDrink, "Drink number: " + ((seconds / 60) + 1));
-		notification.contentView = contentView;
-		// notification.setLatestEventInfo(getApplicationContext(), "PowerHour Pro", "Drink number: " + ((seconds / 60) + 1), notificationIntent);
-		mNotificationManager.notify(R.layout.custom_notification_layout, notification);
 	}
 	
 	private void toastError(String message) {
@@ -265,10 +234,6 @@ public class PowerHourService extends Service {
     		myTimer.schedule(new SecondTimer(), 1000, INTERVAL);
     		playingState = PowerHourService.PLAYING;
     	}
-	}
-	
-	void doStop(){
-		stopSelf();
 	}
 	
 	private final IPowerHourService mBinder = new PowerHourServiceInterface();
@@ -318,44 +283,12 @@ public class PowerHourService extends Service {
 				}
 				
 				loadNextSong();
+				
 				// Send progress update
 				Intent intent = new Intent();
 				intent.putExtra(PowerHourService.PROGRESS, minutes);
 				intent.setAction(PowerHourService.PROGRESS_UPDATE_BROADCAST);
 				LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-				// Play sound clip
-				boolean useAlert = powerHourPrefs.getUseAlert();
-				if(useAlert){
-					boolean useArnold = powerHourPrefs.getUseArnold();
-					String alertPath = powerHourPrefs.getAlertPath();
-					synchronized(splayerLock){
-	    				soundClipPlayer.reset();
-	    				try{
-		    				if(useArnold || alertPath.equals("arnold")){
-		    					FileDescriptor soundClip = getResources().openRawResourceFd(R.raw.doitnow).getFileDescriptor();
-		    					soundClipPlayer.setDataSource(soundClip);
-		    				} else {
-		    					soundClipPlayer.setDataSource(alertPath);
-		    				}
-	    					soundClipPlayer.prepare();
-	    					soundClipPlayer.start();
-	    				} catch (IllegalStateException e) {
-	    					toastError("Could not play sound clip!");
-	    					Log.e(TAG, "Could not play sound clip!");
-	    					e.printStackTrace();
-	    				} catch (IOException e) {
-	    					String errorMessage;
-	    					if(useArnold){
-	    						errorMessage = "The default alert sound clip is missing? strange...";
-	    					} else {
-	    						errorMessage = "The alert sound clip is invalid. Change custom alert sound in preferences";
-	    					}
-	    					toastError(errorMessage);
-	    					Log.e(TAG, errorMessage);
-	    					e.printStackTrace();
-	    				}
-					}
-				}
     		}
     	}
     }

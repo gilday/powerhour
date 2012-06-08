@@ -27,8 +27,7 @@ import android.widget.Toast;
 public class TitleScreen extends Activity {
 
 	private static final String TAG = "TitleScreenActivity";
-	private Button playNowButton, startPlayListButton;
-	
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -36,9 +35,9 @@ public class TitleScreen extends Activity {
         setContentView(R.layout.main);
         TextView tv = (TextView)findViewById(R.id.main_title);
         tv.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/COLLEGE.TTF"));
-        
-        playNowButton = (Button)findViewById(R.id.playNowButton);
-        startPlayListButton = (Button)findViewById(R.id.selectPlaylistButton);
+
+        Button playNowButton = (Button) findViewById(R.id.playNowButton);
+        Button startPlayListButton = (Button) findViewById(R.id.selectPlaylistButton);
         
         playNowButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -46,10 +45,10 @@ public class TitleScreen extends Activity {
             }
         });
         
-        startPlayListButton.setOnClickListener(new OnClickListener(){
-        	public void onClick(View v){
-        		startFromPlaylist();
-        	}
+        startPlayListButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                startFromPlaylist();
+            }
         });
     }
     
