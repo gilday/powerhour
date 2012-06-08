@@ -11,13 +11,13 @@
  	<TextView android:id="@+id/notificationSongTitle"
  		android:layout_width="fill_parent" android:layout_height="wrap_content" 
  		android:layout_toRightOf="@id/notificationIcon" 
- 		android:textColor="#FF000000" android:textSize="16dip" />
+ 		style="@style/NotificationTitle" />
  	<TextView android:id="@+id/notificationArtist"
  		android:layout_width="fill_parent" android:layout_height="wrap_content"
  		android:layout_toRightOf="@id/notificationIcon" android:layout_below="@id/notificationSongTitle" 
- 		android:textColor="#FF000000" android:textSize="14dip" />
+ 		style="@style/NotificationText" />
 	<TextView android:id="@+id/notificationDrink"
   		android:layout_width="fill_parent" android:layout_height="wrap_content"
   		android:layout_toRightOf="@id/notificationIcon" android:layout_below="@id/notificationArtist" 
-  		android:textColor="#FF000000" android:textSize="14dip" />
+		style="@style/NotificationText" />
 </RelativeLayout>
