@@ -55,7 +55,7 @@
 		
 		<CheckBoxPreference android:key="pref_quickload" 
 			android:title="@string/quickload_title" 
-			android:defaultValue="false" android:summary="@string/quickload_summary"/>	
+			android:defaultValue="true" android:summary="@string/quickload_summary"/>	
 		
 	</PreferenceCategory>
 	
