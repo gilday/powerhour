@@ -1,62 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android" 
-  android:title="Settings" 
-  android:summary="Settings for Power Hour Mobile">
+  android:title="@string/settings">
   
-  	<PreferenceCategory android:title="Song change alert">
+  	<PreferenceCategory android:title="@string/changealert_category">
   
 	  	<CheckBoxPreference android:key="pref_usealert"
 	  		android:defaultValue="true"
-	  		android:title="Enable Alert"
-	  		android:summary="Play sound on song change" />
+	  		android:title="@string/usealert_title"
+	  		android:summary="@string/usealert_summary" />
 	  		
 		<CheckBoxPreference android:key="pref_arnold"
 			android:defaultValue="true" 
-			android:title="Use default alert"
+			android:title="@string/usearnold_title"
 			android:dependency="pref_usealert" 
-			android:summary="Do it now!"/>
+			android:summary="@string/usearnold_summary"/>
 			
 		<gilday.android.powerhour.view.AudioFilePreference android:key="pref_alertpath"
 			android:defaultValue="arnold"
-			android:title="Custom alert sound" 
-			android:summary="pick a custom alert sound from your sd card or record you own"
+			android:title="@string/alertpath_title" 
+			android:summary="@string/alertpath_summary"
 			android:shouldDisableView="true"
 			android:dependency="pref_usealert" />
 		
 	</PreferenceCategory>
 	
 	
-	<PreferenceCategory android:title="Music">
+	<PreferenceCategory android:title="@string/music_category">
 	
 		<CheckBoxPreference android:key="pref_shuffle" 
-			android:title="Shuffle" 
+			android:title="@string/shuffle_title" 
 			android:defaultValue="true"/>
 			
 		<CheckBoxPreference android:key="pref_randomOffset"
 			android:defaultValue="false"
-			android:title="Randomize song offset" />
+			android:title="@string/randomOffset_title" />
 		
 		<gilday.android.powerhour.view.RangePreference android:key="pref_offsetINT"
 			android:defaultValue="0" 
-			android:title="@string/rangepreferencetitle"
+			android:title="@string/offset_title"
 			android:shouldDisableView="true" 
-			android:summary="@string/rangepreferencesummary" />
+			android:summary="@string/offset_summary" />
 		
 	</PreferenceCategory>
 	
 	
-	<PreferenceCategory android:title="Power Hour">
+	<PreferenceCategory android:title="@string/powerhour_category">
 	
 		<EditTextPreference android:key="pref_duration"
-			android:title="Power Hour Duration" 
-			android:summary="Change how long the power hour lasts. Power half-hour? Century?" 
+			android:title="@string/duration_title" 
+			android:summary="@string/duration_summary" 
 			android:defaultValue="60"
 			android:inputType="number"/>
 		
 		<CheckBoxPreference android:key="pref_quickload" 
-			android:title="Quick Load" 
-			android:defaultValue="false" android:summary="Only load the first random 180 songs instead of the entire playlist. Helpful for loading in extremely large playlists"/>	
+			android:title="@string/quickload_title" 
+			android:defaultValue="false" android:summary="@string/quickload_summary"/>	
 		
 	</PreferenceCategory>
 	

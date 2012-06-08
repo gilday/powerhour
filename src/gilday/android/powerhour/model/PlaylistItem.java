@@ -14,7 +14,7 @@ public class PlaylistItem {
 	public String album;
 	public String song;
 	public Bitmap art;
-	public int id;
+    public int id;
 	public boolean omit = false;
 	
 	public PlaylistItem() {}

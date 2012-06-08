@@ -12,7 +12,5 @@
 	  	<TextView android:id="@+id/playlist_size"
 	  		android:layout_height="wrap_content" android:layout_width="wrap_content"
 	  		 android:textSize="12dip" android:textColor="#CCCCCC" />
-	  	<TextView android:layout_height="wrap_content" android:layout_width="wrap_content"
-	  		android:textSize="12dip" android:textColor="#CCCCCC" android:text=" songs" />
   	</LinearLayout>
 </LinearLayout>

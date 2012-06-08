@@ -161,8 +161,8 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
     	switch(item.getItemId()){
     	case R.id.stopButton_menu:
 			new AlertDialog.Builder(this)
-            .setTitle("Are you sure you want to end power hour?")
-            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            .setTitle(getString(R.string.quit_confirmation))
+            .setPositiveButton(getString(R.string.dialog_acknowledgeButton), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                 	// Unbind
             		if(phService != null) {
@@ -175,7 +175,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
                 	finish();
                 }
             })
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(getString(R.string.dialog_cancel), null)
             .show();
     		break;
     	case R.id.skipButton_menu:
@@ -233,7 +233,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
         public void onServiceDisconnected(ComponentName className) {
         	new AlertDialog.Builder(NowPlayingActivity.this)
 	  	      .setMessage(getString(R.string.completed))
-	  	      .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	  	      .setPositiveButton(getString(R.string.dialog_acknowledgeButton), new DialogInterface.OnClickListener() {
 	  	    	  public void onClick(DialogInterface inteface, int button){
 	  	    		  finish();
 	  	    	  }

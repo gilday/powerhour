@@ -101,7 +101,7 @@ public class MyPlaylistBrowserActivity extends Activity {
         		HashMap<String,String> playlist = new HashMap<String,String>();
 	        	playlist.put(ID, "" + playlistId);
 	        	playlist.put(NAME, cursor.getString(colnamex));
-	        	playlist.put(SIZE, "" + size);
+	        	playlist.put(SIZE, String.format(getString(R.string.playlistSongsCount), size));
 	        	playlists.add(playlist);
         	}
         } while(cursor.moveToNext());

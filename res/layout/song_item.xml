@@ -38,8 +38,8 @@
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:layout_margin="3dip"
-        android:textOff="Skip"
-        android:textOn="Play" />
+        android:textOff="@string/omit_toggle_off"
+        android:textOn="@string/omit_toggle_on" />
 
     <TextView
         android:id="@+id/songitem_position"

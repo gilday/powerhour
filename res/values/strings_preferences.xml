@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="offset_summary">How far in should each song start?</string>
+    <string name="offset_title">Select Offset</string>
+    <string name="shuffle_title">Shuffle</string>
+    <string name="randomOffset_title">Randomize song offset</string>
+    <string name="alertpath_title">Custom alert sound</string>
+    <string name="alertpath_summary">pick a custom alert sound from your sd card or record you own</string>
+    <string name="usealert_title">Enable Alert</string>
+    <string name="usealert_summary">Play sound on song change</string>
+    <string name="usearnold_title">Use default alert</string>
+    <string name="usearnold_summary">Do it now!</string>
+    <string name="changealert_category">Song change alert</string>
+    <string name="settings">Power Hour Settings</string>
+    <string name="music_category">Music</string>
+    <string name="powerhour_category">Power Hour</string>
+    <string name="duration_title">Power Hour duration</string>
+    <string name="duration_summary">Change how long the power hour lasts. Power half-hour? Century?</string>
+    <string name="quickload_title">Quick Load</string>
+    <string name="quickload_summary">Only load the first random 180 songs instead of the entire playlist. Helpful for loading in extremely large playlists</string>
+    
+</resources>

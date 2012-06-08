@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_noSongsOnPlaylist">This playlist is empty! Cannot start Power Hour</string>
+    <string name="error_noSongsOnDevice">There are no songs on this device! Cannot start Power Hour</string>
+    
+</resources>
