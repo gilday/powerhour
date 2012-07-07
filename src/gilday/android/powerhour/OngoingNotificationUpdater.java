@@ -41,7 +41,7 @@ public class OngoingNotificationUpdater implements IMusicUpdateListener, IProgre
 
     @Override
     public void onProgressUpdate(int currentMinute) {
-        notification.contentView.setTextViewText(R.id.notificationDrink, context.getString(R.string.notification_drink) + ": " + currentMinute + 1);
+        notification.contentView.setTextViewText(R.id.notificationDrink, String.format(context.getString(R.string.notification_drink), ++currentMinute));
         notificationManager.notify(R.layout.custom_notification_layout, notification);
     }
 

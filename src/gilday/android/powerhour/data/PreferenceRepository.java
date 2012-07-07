@@ -31,6 +31,10 @@ public class PreferenceRepository {
 		prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
 	}
 	
+	/**
+	 * 
+	 * @return Number of minutes this power hour is set to run
+	 */
 	public int getDuration() {
 		String durationString = prefs.getString(Keys.PREF_DURATION, defaultDuration);
 		int duration;

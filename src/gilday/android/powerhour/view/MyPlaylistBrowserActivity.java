@@ -45,7 +45,7 @@ public class MyPlaylistBrowserActivity extends Activity {
 		int duration = new PreferenceRepository(this).getDuration();
 		// Set up filter button to reload playlists
 		Button filterButton = (Button)findViewById(R.id.filter_button);
-		filterButton.setText("Show playlists with " + duration / 60 + " or more songs");
+		filterButton.setText("Show playlists with " + duration + " or more songs");
 		filterButton.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View v) {
 				loadPlaylists(true);
@@ -89,14 +89,15 @@ public class MyPlaylistBrowserActivity extends Activity {
         }
         int colidx = cursor.getColumnIndex(MediaStore.Audio.Playlists._ID);
         int colnamex = cursor.getColumnIndex(MediaStore.Audio.Playlists.NAME);
+        // Get duration if filtering
+        int duration = new PreferenceRepository(this).getDuration();
         // Generate key,value property mappings for each playlist
         do {
         	int playlistId = cursor.getInt(colidx);
         	// measure playlist size
         	int size = MusicUtils.getPlaylistSize(this, playlistId);
         	// If we're filtering playlists that are too short, check if playlist size is sufficient
-        	int duration = new PreferenceRepository(this).getDuration();
-        	if(!filter || size >= (duration / 60)) {
+        	if(!filter || size >= duration) {
         		HashMap<String,String> playlist = new HashMap<String,String>();
 	        	playlist.put(ID, "" + playlistId);
 	        	playlist.put(NAME, cursor.getString(colnamex));
