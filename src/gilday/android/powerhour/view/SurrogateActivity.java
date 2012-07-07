@@ -3,8 +3,12 @@
  */
 package gilday.android.powerhour.view;
 
+import gilday.android.powerhour.R;
 import gilday.android.powerhour.data.Keys;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -17,6 +21,8 @@ import android.preference.PreferenceManager;
  */
 public class SurrogateActivity extends Activity {
 	
+	private boolean isUnableToFindActivity;
+	
 	@Override
 	public void onCreate(Bundle savedInstance){
 		super.onCreate(savedInstance);
@@ -24,7 +30,11 @@ public class SurrogateActivity extends Activity {
 		chooseFileIntent.setAction(Intent.ACTION_GET_CONTENT);
 		// In my case I need an audio file path
 		chooseFileIntent.setType("audio/*");
-		startActivityForResult(chooseFileIntent, 0);
+		try {
+			startActivityForResult(chooseFileIntent, 0);
+		} catch (ActivityNotFoundException e) {
+			isUnableToFindActivity = true;
+		}
 	}
 	
 	@Override
@@ -35,8 +45,24 @@ public class SurrogateActivity extends Activity {
 			 SharedPreferences.Editor prefsEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
 			 prefsEditor.putString(Keys.PREF_ALERTPATH, audioPath.toString());
 			 prefsEditor.commit();
-		}
-		// finish this "hidden" activity on any result
-		finish();
+			finish();
+		} else {
+			// Check if there was an error finding an activity
+			if(isUnableToFindActivity) {
+				new AlertDialog.Builder(this)
+				.setMessage(getString(R.string.error_cannotPickAudio))
+				.setPositiveButton(getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				})
+				.show();
+			} else {
+				// Perhaps user cancelled
+				finish();
+			}
+		} 
 	}
 }

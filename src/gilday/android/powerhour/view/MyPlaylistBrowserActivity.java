@@ -18,7 +18,9 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -42,14 +44,15 @@ public class MyPlaylistBrowserActivity extends Activity {
 		this.setTitle(getString(R.string.PlaylistBrowserTitle));
 		setContentView(R.layout.playlistbrowser);
 		
-		int duration = new PreferenceRepository(this).getDuration();
 		// Set up filter button to reload playlists
-		Button filterButton = (Button)findViewById(R.id.filter_button);
-		filterButton.setText("Show playlists with " + duration + " or more songs");
-		filterButton.setOnClickListener(new Button.OnClickListener() {
-			public void onClick(View v) {
-				loadPlaylists(true);
+		CheckBox filterButton = (CheckBox)findViewById(R.id.filter_button);
+		filterButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+
+			@Override
+			public void onCheckedChanged(CompoundButton button, boolean isChecked) {
+				loadPlaylists(isChecked);
 			}
+			
 		});
 
         ListView playlist_listView = (ListView) findViewById(R.id.playlist_ListView);

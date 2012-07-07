@@ -3,8 +3,6 @@
     
     <string name="app_name">Power Hour Pro</string>
 <string name="title">POWER HOUR PRO</string>
-
-<string name="dialog_acknowledgeButton">OK</string>
 <string name="PlaylistBrowserTitle">Pick a playlist</string>
 <string name="PlaylistEditorTitle">Edit current playlist</string>
 <string name="completed">Power Hour complete- Now go out but don\'t drive!</string>
@@ -15,6 +13,6 @@
 <string name="omit_toggle_on">Play</string>
 <string name="omit_toggle_off">Skip</string>
 <string name="quit_confirmation">Are you sure you want to end Power Hour?</string>
-<string name="dialog_cancel">Cancel</string>
 <string name="notification_drink">Drinks: %d</string>
+<string name="filterPlaylistsButtonText">Only show playlists large enough</string>
 </resources>

@@ -160,7 +160,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
     	case R.id.stopButton_menu:
 			new AlertDialog.Builder(this)
             .setTitle(getString(R.string.quit_confirmation))
-            .setPositiveButton(getString(R.string.dialog_acknowledgeButton), new DialogInterface.OnClickListener() {
+            .setPositiveButton(getString(android.R.string.ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                 	// Unbind
             		if(phService != null) {
@@ -173,7 +173,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
                 	finish();
                 }
             })
-            .setNegativeButton(getString(R.string.dialog_cancel), null)
+            .setNegativeButton(getString(android.R.string.cancel), null)
             .show();
     		break;
     	case R.id.skipButton_menu:
@@ -231,7 +231,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
         public void onServiceDisconnected(ComponentName className) {
         	new AlertDialog.Builder(NowPlayingActivity.this)
 	  	      .setMessage(getString(R.string.completed))
-	  	      .setPositiveButton(getString(R.string.dialog_acknowledgeButton), new DialogInterface.OnClickListener() {
+	  	      .setPositiveButton(getString(android.R.string.ok), new DialogInterface.OnClickListener() {
 	  	    	  public void onClick(DialogInterface inteface, int button){
 	  	    		  finish();
 	  	    	  }

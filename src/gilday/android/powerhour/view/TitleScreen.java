@@ -128,7 +128,7 @@ public class TitleScreen extends Activity {
 		// So there's apparently no songs on the SD card
     	new AlertDialog.Builder(this)
   	      .setMessage(message)
-  	      .setPositiveButton(getString(R.string.dialog_acknowledgeButton), new DialogInterface.OnClickListener() {
+  	      .setPositiveButton(getString(android.R.string.ok), new DialogInterface.OnClickListener() {
   	    	  public void onClick(DialogInterface inteface, int button){
   	    		  // Do nothing, just want user to acknowledge
   	    	  }

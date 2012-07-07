@@ -2,5 +2,6 @@
 <resources>
     <string name="error_noSongsOnPlaylist">This playlist is empty! Cannot start Power Hour</string>
     <string name="error_noSongsOnDevice">There are no songs on this device! Cannot start Power Hour</string>
+    <string name="error_cannotPickAudio">No apps are installed to pick audio files. Try installing a music player like Google Play Music</string>
     
 </resources>
