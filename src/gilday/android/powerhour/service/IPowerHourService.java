@@ -1,4 +1,4 @@
-package gilday.android.powerhour;
+package gilday.android.powerhour.service;
 
 
 public interface IPowerHourService {

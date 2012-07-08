@@ -1,24 +1,25 @@
 /**
  * 
  */
-package gilday.android.powerhour;
+package gilday.android.powerhour.service;
 
 import android.app.Service;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.widget.Toast;
+import gilday.android.powerhour.MusicUpdateBroadcastReceiver;
+import gilday.android.powerhour.NotificationSoundClipPlayer;
+import gilday.android.powerhour.OngoingNotificationUpdater;
+import gilday.android.powerhour.ProgressUpdateBroadcastReceiver;
 import gilday.android.powerhour.data.PreferenceRepository;
 
 import java.io.IOException;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -26,35 +27,33 @@ import java.util.TimerTask;
  * @author John Gilday
  *
  */
-public class PowerHourService extends Service {
+public class PowerHourService extends Service implements ISongPreparedListener, IAudioFocusLostListener {
 	public static final int NOT_STARTED = 0;
 	public static final int PLAYING = 1;
 	public static final int PAUSED = 2;
-	public static final int INTERVAL = 1000;
+	static final int INTERVAL = 1000;
 	// public static final int INTERVAL = 200;
 	public static final String MUSIC_UPDATE_BROADCAST = "com.johnathangilday.powerhour.musicupdatebroadcast";
 	public static final String PROGRESS_UPDATE_BROADCAST = "com.johnathangilday.powerhour.progressupdatebroadcast";
+	public static final String PROGRESS_PAUSE_RESUME_BROADCAST = "com.johnathangilday.powerhour.progresspauseresumebroadcast";
 	public static final String SONGID = "songid";
 	public static final String PROGRESS = "progress";
+	public static final String IS_PAUSED = "isPaused";
 	
-	private static final String TAG = "PH_Service";
-	
-	private MediaPlayer mplayer;
 	private Timer myTimer;
 	private int seconds = -1;
-	private Random rand;
 	private int playingState = NOT_STARTED;
-	final Object mplayerLock = new Object();
 	Handler mHandler = new Handler();
 	private PreferenceRepository powerHourPrefs;
 	private NowPlayingPlaylistManager playlistManager;
+	private SongPlayer songPlayer;
     private MusicUpdateBroadcastReceiver musicUpdateBroadcastReceiver;
     private ProgressUpdateBroadcastReceiver progressUpdateBroadcastReceiver;
 	
 	@Override
 	public void onCreate(){
 		super.onCreate();
-		mplayer = new MediaPlayer();
+		
 		powerHourPrefs = new PreferenceRepository(this);
 		playlistManager = new NowPlayingPlaylistManager(this);
 		
@@ -64,10 +63,6 @@ public class PowerHourService extends Service {
 				switch(state){
 				case TelephonyManager.CALL_STATE_RINGING:
 					if(playingState == PLAYING)
-						doPause();
-					break;
-				case TelephonyManager.CALL_STATE_IDLE:
-					if(playingState == PAUSED)
 						doPause();
 					break;
 				}
@@ -82,6 +77,7 @@ public class PowerHourService extends Service {
         progressUpdateBroadcastReceiver = new ProgressUpdateBroadcastReceiver(drinkNotificationPlayer, drinkNotificationUpdater);
         musicUpdateBroadcastReceiver = new MusicUpdateBroadcastReceiver(drinkNotificationUpdater);
         lbm.registerReceiver(progressUpdateBroadcastReceiver, new IntentFilter(PowerHourService.PROGRESS_UPDATE_BROADCAST));
+        lbm.registerReceiver(progressUpdateBroadcastReceiver, new IntentFilter(PowerHourService.PROGRESS_PAUSE_RESUME_BROADCAST));
 		lbm.registerReceiver(musicUpdateBroadcastReceiver, new IntentFilter(PowerHourService.MUSIC_UPDATE_BROADCAST));
 	}
 	
@@ -94,9 +90,10 @@ public class PowerHourService extends Service {
 			}
 			// Start timer
 	    	myTimer = new Timer();
-	    	// reassign rand to reset the random seed
-	    	rand = new Random();
 
+	    	// Initialize new SongPlayer because about to start playing music
+	    	songPlayer = new SongPlayer(this, this);
+	    	
 	    	myTimer.schedule(new SecondTimer(), 0, INTERVAL);
 		}
 		
@@ -115,11 +112,7 @@ public class PowerHourService extends Service {
 		myTimer.cancel();
 		if(playingState != PowerHourService.NOT_STARTED){
 			playingState = PowerHourService.NOT_STARTED;
-			synchronized(mplayerLock){
-				mplayer.stop();
-		    	mplayer.release();
-		    	mplayer = null;
-			}
+			songPlayer.dispose();
 		}
         // Clear progressUpdateReceiver
         progressUpdateBroadcastReceiver.unregisterUpdateListener();
@@ -144,73 +137,42 @@ public class PowerHourService extends Service {
 			return -1;
 		}
 		
-		// Set the offset
-		int msOffset = 0;
-		double offset = powerHourPrefs.getOffset();
-		if(offset != 0){
-			// Get the duration of this song in ms
-			long duration = MusicUtils.getDuration(getBaseContext(), songId);
-			// Calculate offset
-			// Is offset random
-			if(offset == PowerHourPreferences.RANDOM){
-				// Ensure the offset will leave at least a minute of playback
-				// MusicUtils returns duration in ms so subtract 60 seconds * 1000
-				double maxOffset = (double)(duration - 60000) / duration;
-				offset = (rand.nextDouble() * maxOffset);
-			}
-			Log.v("OFFSET", "OFFSET: " + offset);
-			msOffset = (int) (offset * duration);
-			//msOffset = (int) (((double)(percent / 100)) * duration);
-			// Is there enough song left to finish the minute?
-			if(duration - msOffset < INTERVAL){
-				// Nope, play the whole song. Don't account for songs 
-				// that are < 60 seconds: If the user put a song < 60
-				// seconds on a Power Hour they're retarded and deserve to 
-				// sit through silence.
-				// TODO: Meh. Maybe do something about this. I'm sure voice memos don't want to be heard
-				// then again, just skip it?
-				msOffset = 0;
-			}
+		try{
+			songPlayer.prepareNextSong(songId, this);
+		} catch (IllegalStateException e) {
+			toastError("Nasty error has occured with the Android VM. Please wait for the next song");
+			e.printStackTrace();
+			return -1;
+		} catch (IOException e) {
+			toastError("Song corrupted! Error retrieving song with id: " + songId);
+			e.printStackTrace();
+			return -1;
 		}
 		
-		synchronized(mplayerLock){
-			mplayer.reset();
-			// Get next song's path from MusicUtils
-			String path = MusicUtils.getPathForSong(songId);
-			try {
-				// try set and prepare next song
-				mplayer.setDataSource(path);
-				mplayer.prepare();
-			} catch (IllegalStateException e) {
-				toastError("Nasty error has occured with the Android VM. Please wait for the next song");
-				e.printStackTrace();
-				return -1;
-			} catch (IOException e) {
-				toastError("Song corrupted! Error retrieving song at: " + path);
-				e.printStackTrace();
-				return -1;
-			}
-			// Set the offset
-			mplayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
-				public void onSeekComplete(MediaPlayer mp) {
-					double offset = powerHourPrefs.getOffset();
-					Log.d(TAG, "Offset: " + offset + ".  Current pos: " + mplayer.getCurrentPosition());
-					if(playingState == PowerHourService.PLAYING) {
-						mplayer.start();
-					}
-					mplayer.setOnSeekCompleteListener(null);
-				}
-			});
-			Log.d(TAG, "Offset: " + offset + ".  Current pos: " + mplayer.getCurrentPosition());
-			mplayer.seekTo(msOffset);			
-			
-    		// Send update
-    		Intent intent = new Intent();
-    		intent.putExtra(PowerHourService.SONGID, songId);
-    		intent.setAction(PowerHourService.MUSIC_UPDATE_BROADCAST);
-    		LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-		}
+		// Send update
+		Intent intent = new Intent();
+		intent.putExtra(PowerHourService.SONGID, songId);
+		intent.setAction(PowerHourService.MUSIC_UPDATE_BROADCAST);
+		LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+		
 		return songId;
+	}
+	
+	@Override
+	public void onSongPrepared(SongPlayer audioPlayerManager) {
+		// If the power hour is playing..
+		if(playingState == PLAYING) {
+			// .. press play on the audio manager
+			audioPlayerManager.play();
+		}
+	}
+	
+	@Override
+	public void onAudioFocusLost() {
+		// The app has lost focus indefinitely to another music player
+		// Pause the Power Hour until user manually plays
+		if(playingState == PowerHourService.PLAYING)
+			doPause();
 	}
 	
 	private void toastError(String message) {
@@ -225,15 +187,21 @@ public class PowerHourService extends Service {
 	
 	void doPause(){
     	if(playingState == PowerHourService.PLAYING) {
-    		mplayer.pause();
+    		songPlayer.pause();
     		myTimer.cancel();
     		playingState = PowerHourService.PAUSED;
     	} else {
-    		mplayer.start();
+    		songPlayer.play();
     		myTimer = new Timer();
     		myTimer.schedule(new SecondTimer(), 1000, INTERVAL);
     		playingState = PowerHourService.PLAYING;
     	}
+    	
+    	// Send Progress Pause / Resume Broadcast
+    	Intent broadcast = new Intent();
+    	broadcast.putExtra(PowerHourService.IS_PAUSED, (playingState == PowerHourService.PAUSED));
+    	broadcast.setAction(PROGRESS_PAUSE_RESUME_BROADCAST);
+    	LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(broadcast);
 	}
 	
 	private final IPowerHourService mBinder = new PowerHourServiceInterface();

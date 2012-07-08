@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="gilday.android.powerhour"
       android:versionName="2.0.1" android:versionCode="12">
-      <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="10"/>
+      <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="10"/>
       <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:description="@string/description">
     <activity android:label="@string/app_name" android:name="gilday.android.powerhour.view.TitleScreen" android:configChanges="orientation" />
@@ -17,7 +17,7 @@
 	</activity>
 	<activity android:name="gilday.android.powerhour.view.MyPlaylistBrowserActivity" />
 	<activity android:name="gilday.android.powerhour.view.SurrogateActivity" />
-	<service android:name="gilday.android.powerhour.PowerHourService" />
+	<service android:name=".service.PowerHourService" />
 	<activity android:name="gilday.android.powerhour.view.PlaylistEditor"></activity>
 	<provider android:label="Power Hour playlists" android:icon="@drawable/icon" android:authorities="com.johnathangilday.powerhour.provider" android:name=".provider.CurrentPlaylistProvider"></provider>
 </application>

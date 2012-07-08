@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import gilday.android.powerhour.service.PowerHourService;
+
 import java.util.LinkedList;
 
 public class MusicUpdateBroadcastReceiver extends BroadcastReceiver {

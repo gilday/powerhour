@@ -1,4 +1,4 @@
-package gilday.android.powerhour;
+package gilday.android.powerhour.service;
 
 import gilday.android.powerhour.data.PowerHour.NowPlaying;
 import gilday.android.powerhour.data.PreferenceRepository;

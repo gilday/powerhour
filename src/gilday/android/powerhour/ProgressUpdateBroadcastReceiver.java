@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import gilday.android.powerhour.service.PowerHourService;
+
 import java.util.LinkedList;
 
 public class ProgressUpdateBroadcastReceiver extends BroadcastReceiver {
@@ -29,10 +31,21 @@ public class ProgressUpdateBroadcastReceiver extends BroadcastReceiver {
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
-        int minute = intent.getExtras().getInt(PowerHourService.PROGRESS);
-        for(IProgressUpdateListener listener : listeners) {
-            listener.onProgressUpdate(minute);
-        }
+		if(intent.getAction().equals(PowerHourService.PROGRESS_UPDATE_BROADCAST)){
+	        int minute = intent.getExtras().getInt(PowerHourService.PROGRESS);
+	        for(IProgressUpdateListener listener : listeners) {
+	            listener.onProgressUpdate(minute);
+	        }
+	        return;
+		}
+		if(intent.getAction().equals(PowerHourService.PROGRESS_PAUSE_RESUME_BROADCAST)){
+			if(intent.getExtras().getBoolean(PowerHourService.IS_PAUSED))
+				for(IProgressUpdateListener listener : listeners)
+					listener.onProgressPaused();
+			else 
+				for(IProgressUpdateListener listener : listeners)
+					listener.onProgressResumed();
+		}
 	}
 
 }

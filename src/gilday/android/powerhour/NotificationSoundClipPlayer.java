@@ -69,4 +69,14 @@ public class NotificationSoundClipPlayer implements IProgressUpdateListener, IDi
 		}
 	}
 
+	@Override
+	public void onProgressPaused() {
+		// Don't care		
+	}
+
+	@Override
+	public void onProgressResumed() {
+		// Don't care
+	}
+
 }

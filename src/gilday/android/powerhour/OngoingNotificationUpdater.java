@@ -49,4 +49,15 @@ public class OngoingNotificationUpdater implements IMusicUpdateListener, IProgre
     public void dispose() {
         notificationManager.cancel(R.layout.custom_notification_layout);
     }
+
+	@Override
+	public void onProgressPaused() {
+		// Do nothing. Will use this when play / pause controls are in the notification area
+		
+	}
+
+	@Override
+	public void onProgressResumed() {
+		// Do nothing. Will use this when play / pause controls are in the notification area
+	}
 }

@@ -4,16 +4,16 @@
 package gilday.android.powerhour.view;
 
 import gilday.android.powerhour.IMusicUpdateListener;
-import gilday.android.powerhour.IPowerHourService;
 import gilday.android.powerhour.IProgressUpdateListener;
 import gilday.android.powerhour.MusicUpdateBroadcastReceiver;
 import gilday.android.powerhour.MusicUtils;
 import gilday.android.powerhour.PowerHourPreferences;
-import gilday.android.powerhour.PowerHourService;
 import gilday.android.powerhour.ProgressUpdateBroadcastReceiver;
 import gilday.android.powerhour.R;
 import gilday.android.powerhour.data.PreferenceRepository;
 import gilday.android.powerhour.model.PlaylistItem;
+import gilday.android.powerhour.service.IPowerHourService;
+import gilday.android.powerhour.service.PowerHourService;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Typeface;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -71,6 +72,9 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 		
 		setContentView(R.layout.nowplaying);
 		
+		// Volume buttons will control media stream
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		
 		artistText = (TextView)findViewById(R.id.ArtistTitle);
 		albumText = (TextView)findViewById(R.id.AlbumTitle);
 		songText = (TextView)findViewById(R.id.SongTitle);
@@ -106,6 +110,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
 		lbm.registerReceiver(musicUpdateReceiver, new IntentFilter(PowerHourService.MUSIC_UPDATE_BROADCAST));
 		lbm.registerReceiver(progressUpdateReceiver, new IntentFilter(PowerHourService.PROGRESS_UPDATE_BROADCAST));
+		lbm.registerReceiver(progressUpdateReceiver, new IntentFilter(PowerHourService.PROGRESS_PAUSE_RESUME_BROADCAST));
 	}
 	
 	@Override
@@ -241,19 +246,9 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
     };
     
     public void pauseClick(View v) {
+    	// Send pause. This Activity will receive a callback when the Power Hour's progression has 
+    	// changed so will handle chaning the UI accordingly in those callbacks
 		phService.pause();
-		if(progressUpdateTimer != null) {
-			progressUpdateTimer.cancel();
-			progressUpdateTimer.purge();
-		}
-		if(phService.getPlayingState() != PowerHourService.PLAYING){
-			pauseButton.setImageResource(R.drawable.play);
-		} else {
-			pauseButton.setImageResource(R.drawable.pause);
-			int milisecondsElapsed = phService.getProgress() * 1000;
-			progressUpdateTimer = new Timer();
-			progressUpdateTimer.schedule(new ProgressDisplayTimerTask(milisecondsElapsed), 0, progressTimerInterval);
-		}
     }
     
     public void skipClick(View v) {
@@ -336,6 +331,27 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 		progressUpdateTimer = new Timer();
 		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(currentMinute * 60000), 0, progressTimerInterval);
 		updateMinutesText(currentMinute);
+	}
+	
+	@Override
+	public void onProgressPaused() {
+		// Cancel the intra-minute progress bar
+		if(progressUpdateTimer != null) {
+			progressUpdateTimer.cancel();
+			progressUpdateTimer.purge();
+		}
+		// Set pause/play button icon to play
+		pauseButton.setImageResource(R.drawable.play);
+	}
+
+	@Override
+	public void onProgressResumed() {
+		// Set pause/play button icon to pause
+		pauseButton.setImageResource(R.drawable.pause);
+		// Start a new intra-minute timer
+		int milisecondsElapsed = phService.getProgress() * 1000;
+		progressUpdateTimer = new Timer();
+		progressUpdateTimer.schedule(new ProgressDisplayTimerTask(milisecondsElapsed), 0, progressTimerInterval);
 	}
 	
 	private class ProgressDisplayTimerTask extends TimerTask
