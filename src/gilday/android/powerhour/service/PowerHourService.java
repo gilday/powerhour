@@ -40,6 +40,9 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
 	public static final String PROGRESS = "progress";
 	public static final String IS_PAUSED = "isPaused";
 	
+	public static final String ACTION_PLAY_PAUSE = "com.johnathangilday.powerhour.action.playpause";
+	public static final String ACTION_SKIP = "com.johnathangilday.powerhour.action.skip";
+	
 	private Timer myTimer;
 	private int seconds = -1;
 	private int playingState = NOT_STARTED;
@@ -63,7 +66,7 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
 				switch(state){
 				case TelephonyManager.CALL_STATE_RINGING:
 					if(playingState == PLAYING)
-						doPause();
+						playPause();
 					break;
 				}
 			}
@@ -96,6 +99,15 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
 	    	
 	    	myTimer.schedule(new SecondTimer(), 0, INTERVAL);
 		}
+		
+		// PowerHourService handles intents for ACTION_PLAY_PAUSE and ACTION_SKIP 
+		// so external actors (like BroadcastReceivers) may send these actions without binding
+		if(intent != null) {
+			String action = intent.getAction();
+			if(ACTION_PLAY_PAUSE.equals(action)) playPause();
+			else if(ACTION_SKIP.equals(action)) skip();
+		}
+		
 		
 		return START_STICKY;
 	}
@@ -172,7 +184,7 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
 		// The app has lost focus indefinitely to another music player
 		// Pause the Power Hour until user manually plays
 		if(playingState == PowerHourService.PLAYING)
-			doPause();
+			playPause();
 	}
 	
 	private void toastError(String message) {
@@ -185,7 +197,7 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
 		});
 	}
 	
-	void doPause(){
+	void playPause(){
     	if(playingState == PowerHourService.PLAYING) {
     		songPlayer.pause();
     		myTimer.cancel();
@@ -204,20 +216,24 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
     	LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(broadcast);
 	}
 	
+	int skip() {
+    	if(!playlistManager.isPlayingLastSong()){
+    		return loadNextSong();
+    	} else {
+    		return -1;
+    	}
+	}
+	
 	private final IPowerHourService mBinder = new PowerHourServiceInterface();
     
     private class PowerHourServiceInterface extends Binder implements IPowerHourService
     {
-	    public void pause() { 
-	    	doPause();
+	    public void playPause() { 
+	    	PowerHourService.this.playPause();
 	    }
 	    
 	    public int skip() {
-	    	if(!playlistManager.isPlayingLastSong()){
-	    		return loadNextSong();
-	    	} else {
-	    		return -1;
-	    	}
+	    	return PowerHourService.this.skip();
 	    }
 	    
 	    public int getPlayingState() {

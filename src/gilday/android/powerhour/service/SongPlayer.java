@@ -7,6 +7,7 @@ import gilday.android.powerhour.IDisposable;
 import gilday.android.powerhour.MusicUtils;
 import gilday.android.powerhour.PowerHourPreferences;
 import gilday.android.powerhour.data.PreferenceRepository;
+import android.content.ComponentName;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -18,18 +19,14 @@ import android.util.Log;
  * @author Johnathan Gilday
  *
  */
-class SongPlayer implements IDisposable, OnAudioFocusChangeListener {
+class SongPlayer implements IDisposable {
 
-	enum AudioFocus { NoFocusNoDuck, NoFocusCanDuck, Focus };
-	
 	private static final String TAG = "SongPlayer";
 	final private Object mplayerLock = new Object();
 	private MediaPlayer mplayer;
 	private Context context;
 	private PreferenceRepository powerHourPrefs;
-	private AudioManager audioManagerSystem;
-	private AudioFocus audioFocus = AudioFocus.NoFocusNoDuck;
-	private IAudioFocusLostListener audioFocusLostListener;
+	private AudioFocusStateManager audioFocusStateManager;
 	
 	/**
 	 * Construct the AudioPlayerManager just before it needs to play songs since it will 
@@ -41,8 +38,7 @@ class SongPlayer implements IDisposable, OnAudioFocusChangeListener {
 		mplayer = new MediaPlayer();
 		this.context = context;
 		powerHourPrefs = new PreferenceRepository(context);
-		audioManagerSystem = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-		this.audioFocusLostListener = audioFocusLostListener;
+		audioFocusStateManager = new AudioFocusStateManager(context, audioFocusLostListener);
 	}
 	
 	/**
@@ -80,22 +76,15 @@ class SongPlayer implements IDisposable, OnAudioFocusChangeListener {
 	public void pause() {
 		if(mplayer.isPlaying())
 			mplayer.pause();
-		
-		tryAbandonAudioFocus();
 	}
 	
 	public void play() {
-		tryGetAudioFocus();
-		if(audioFocus == AudioFocus.NoFocusNoDuck) {
+		audioFocusStateManager.tryGetAudioFocus();
+		if(!audioFocusStateManager.hasFocus()) {
 			if(mplayer.isPlaying())
 				mplayer.pause();
 			return;
 		}
-		if(audioFocus == AudioFocus.NoFocusCanDuck) 
-			// Lower volume
-			mplayer.setVolume(0.1f, 0.1f);
-		else 
-			mplayer.setVolume(1.0f, 1.0f);
 		
 		if(!mplayer.isPlaying()) mplayer.start();
 	}
@@ -110,49 +99,9 @@ class SongPlayer implements IDisposable, OnAudioFocusChangeListener {
 	    	mplayer.release();
 	    	mplayer = null;
 		}
-		tryAbandonAudioFocus();
+		audioFocusStateManager.tryAbandonAudioFocus();
 	}
 
-	@Override
-	public void onAudioFocusChange(int focusCode) {
-		String tag = "SongPlayer";
-		switch(focusCode){
-		
-		case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
-		case AudioManager.AUDIOFOCUS_GAIN:
-			Log.v(tag, "AUDIOFOCUS_GAIN");
-			audioFocus = AudioFocus.Focus;
-			// Regained focus. Bump volume back up
-			mplayer.setVolume(1.0f, 1.0f);
-			break;
-		case AudioManager.AUDIOFOCUS_LOSS:
-		case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-			audioFocus = AudioFocus.NoFocusNoDuck;
-			// On any loss, alert the IAudioFocusLostListener to pause the PowerHour
-			audioFocusLostListener.onAudioFocusLost();
-			break;
-		case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-			Log.v(tag, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
-			// We can duck, just lower the volume for now
-			audioFocus = AudioFocus.NoFocusCanDuck;
-			mplayer.setVolume(0.1f, 0.1f);
-			break;
-		}
-	}
-	
-	private void tryGetAudioFocus() {
-		if(audioFocus == AudioFocus.Focus)
-			return;
-		if(AudioManager.AUDIOFOCUS_REQUEST_GRANTED == 
-			audioManagerSystem.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN))
-			audioFocus = AudioFocus.Focus;
-	}
-	
-	private void tryAbandonAudioFocus() {
-		if(audioFocus != AudioFocus.NoFocusNoDuck && AudioManager.AUDIOFOCUS_REQUEST_GRANTED == audioManagerSystem.abandonAudioFocus(this))
-				audioFocus = AudioFocus.NoFocusNoDuck;
-	}
-	
 	/**
 	 * Based on power hour settings, will determine the number of milliseconds to skip 
 	 * before starting the media playback.
@@ -188,5 +137,137 @@ class SongPlayer implements IDisposable, OnAudioFocusChangeListener {
 			}
 		}
 		return msOffset;
+	}
+	
+
+	
+	class AudioFocusStateManager implements OnAudioFocusChangeListener
+	{
+		private AudioManager audioManager;
+		private ComponentName mediaButtonReceiverClass;
+		private AudioFocusState currentState;
+		private IAudioFocusLostListener audioFocusLostListener;
+		
+		private InitialState initialState;
+		private FocusedState focusedState;
+		private NoFocusNoDuckState noFocusNoDuckState;
+		private NoFocusCanDuckState noFocusCanDuckState;
+		
+		AudioFocusStateManager(Context context, IAudioFocusLostListener audioFocusLostListener) {
+			audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+			mediaButtonReceiverClass = new ComponentName(context, MediaButtonsReceiver.class);
+			this.audioFocusLostListener = audioFocusLostListener;
+			
+			initialState = new InitialState();
+			focusedState = new FocusedState();
+			noFocusNoDuckState = new NoFocusNoDuckState();
+			noFocusCanDuckState = new NoFocusCanDuckState();
+			
+			currentState = initialState;
+		}
+		
+		boolean hasFocus() {
+			return currentState == focusedState;
+		}
+		
+		void tryGetAudioFocus() {
+			if(currentState != focusedState && AudioManager.AUDIOFOCUS_REQUEST_GRANTED == 
+				audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)) {
+				currentState.onGainingFocus();
+				currentState = focusedState;
+			}
+		}
+		
+		void tryAbandonAudioFocus() {
+			if(currentState != noFocusNoDuckState 
+					&& AudioManager.AUDIOFOCUS_REQUEST_GRANTED == audioManager.abandonAudioFocus(this)) {
+				currentState.onGivingUpFocus();
+				currentState = noFocusNoDuckState;
+			}
+		}
+
+		@Override
+		public void onAudioFocusChange(int focusCode) {
+			String tag = "SongPlayer";
+			switch(focusCode){
+			
+			case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
+			case AudioManager.AUDIOFOCUS_GAIN:
+				Log.v(tag, "AUDIOFOCUS_GAIN");
+				if(currentState != focusedState) {
+					currentState.onGainingFocus();
+					currentState = focusedState;
+				}
+				break;
+			case AudioManager.AUDIOFOCUS_LOSS:
+			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+				if(currentState != noFocusNoDuckState) {
+					currentState.onRobbedOfFocusNoDuck();
+					currentState = noFocusNoDuckState;
+				}
+				break;
+			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+				Log.v(tag, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+				if(currentState != noFocusCanDuckState) {
+				// We can duck, just lower the volume for now
+					currentState.onRobbedOfFocusCanDuck();
+					currentState = noFocusCanDuckState;
+				}
+				break;
+			}
+		}
+		
+		abstract class AudioFocusState
+		{
+			private String TAG = "AudioFocus";
+			
+			void onGainingFocus() { 
+				Log.v(TAG, "Gained Focus");
+				// Register buttons
+				audioManager.registerMediaButtonEventReceiver(mediaButtonReceiverClass);
+			}
+			
+			/**
+			 * Report indefinite loss of focus
+			 */
+			void onRobbedOfFocusNoDuck() {
+				Log.v(TAG, "Lost Focus No Duck");
+				audioFocusLostListener.onAudioFocusLost();
+				audioManager.unregisterMediaButtonEventReceiver(mediaButtonReceiverClass);
+			}
+			
+			/**
+			 * Lower volume
+			 */
+			void onRobbedOfFocusCanDuck() {
+				Log.v(TAG, "Lost Focus Can DucK");
+				mplayer.setVolume(0.1f, 0.1f);
+			}
+			
+			void onGivingUpFocus() {
+				Log.v(TAG, "Giving up focus");
+				// Unregister buttons
+				audioManager.unregisterMediaButtonEventReceiver(mediaButtonReceiverClass);
+			}
+		}
+		
+		class InitialState extends AudioFocusState { }
+		
+		class FocusedState extends AudioFocusState { 
+			@Override
+			void onGainingFocus() { }
+		}
+		
+		class NoFocusNoDuckState extends AudioFocusState { }
+			
+		class NoFocusCanDuckState extends AudioFocusState
+		{
+			@Override
+			void onGainingFocus() { 
+				Log.v(TAG, "Bump volume up");
+				// Regained focus. Bump volume back up
+				mplayer.setVolume(1.0f, 1.0f);
+			}
+		}
 	}
 }

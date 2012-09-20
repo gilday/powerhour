@@ -17,8 +17,18 @@
 	</activity>
 	<activity android:name="gilday.android.powerhour.view.MyPlaylistBrowserActivity" />
 	<activity android:name="gilday.android.powerhour.view.SurrogateActivity" />
-	<service android:name=".service.PowerHourService" />
+	<service android:name=".service.PowerHourService" android:exported="false" >
+		<intent-filter>
+			<action android:name="com.johnathangilday.powerhour.action.playpause" />
+			<action android:name="com.johnathangilday.powerhour.action.skip" />
+		</intent-filter>
+	</service>
 	<activity android:name="gilday.android.powerhour.view.PlaylistEditor"></activity>
-	<provider android:label="Power Hour playlists" android:icon="@drawable/icon" android:authorities="com.johnathangilday.powerhour.provider" android:name=".provider.CurrentPlaylistProvider"></provider>
+	<provider android:label="Power Hour playlists" android:icon="@drawable/icon" android:authorities="com.johnathangilday.powerhour.provider" android:name=".provider.CurrentPlaylistProvider" android:exported="false"></provider>android.intent.action.MEDIA_BUTTONandroid.intent.action.MEDIA_BUTTONandroid.intent.action.MEDIA_BUTTON
+	<receiver android:name=".service.MediaButtonsReceiver" android:exported="false" android:enabled="true">
+		<intent-filter>
+			<action android:name="android.intent.action.MEDIA_BUTTON"/>
+		</intent-filter>
+	</receiver>
 </application>
 </manifest> 

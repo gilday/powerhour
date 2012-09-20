@@ -248,7 +248,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
     public void pauseClick(View v) {
     	// Send pause. This Activity will receive a callback when the Power Hour's progression has 
     	// changed so will handle chaning the UI accordingly in those callbacks
-		phService.pause();
+		phService.playPause();
     }
     
     public void skipClick(View v) {

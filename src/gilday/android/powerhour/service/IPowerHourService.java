@@ -7,7 +7,7 @@ public interface IPowerHourService {
 	 * Pause command will change the power hour service's playing state to paused, will 
 	 * end update notification, stop the music, and will pause the timer counting progress
 	 */
-	void pause();
+	void playPause();
 	
 	/**
 	 * Skip command will skip the current song and load the next without affecting power hour 
