@@ -15,4 +15,5 @@
 <string name="quit_confirmation">Are you sure you want to end Power Hour?</string>
 <string name="notification_drink">Drinks: %d</string>
 <string name="filterPlaylistsButtonText">Only show playlists large enough</string>
+<string name="stop">Stop</string>
 </resources>
