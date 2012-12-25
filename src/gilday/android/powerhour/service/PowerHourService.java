@@ -7,16 +7,14 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
-import gilday.android.powerhour.MusicUpdateBroadcastReceiver;
-import gilday.android.powerhour.NotificationSoundClipPlayer;
-import gilday.android.powerhour.OngoingNotificationUpdater;
-import gilday.android.powerhour.ProgressUpdateBroadcastReceiver;
+import gilday.android.powerhour.*;
 import gilday.android.powerhour.data.PreferenceRepository;
 
 import java.io.IOException;
@@ -76,9 +74,14 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
         // alert clip when the service broadcasts a progress advance
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
         NotificationSoundClipPlayer drinkNotificationPlayer = new NotificationSoundClipPlayer(getApplicationContext());
-        OngoingNotificationUpdater drinkNotificationUpdater = new OngoingNotificationUpdater(getApplicationContext());
-        progressUpdateBroadcastReceiver = new ProgressUpdateBroadcastReceiver(drinkNotificationPlayer, drinkNotificationUpdater);
-        musicUpdateBroadcastReceiver = new MusicUpdateBroadcastReceiver(drinkNotificationUpdater);
+        NotificationController notificationController;
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            notificationController = new JellybeanOngoingNotificationUpdater(getApplicationContext());
+        } else {
+            notificationController = new OngoingNotificationUpdater(getApplicationContext());
+        }
+        progressUpdateBroadcastReceiver = new ProgressUpdateBroadcastReceiver(drinkNotificationPlayer, notificationController);
+        musicUpdateBroadcastReceiver = new MusicUpdateBroadcastReceiver(notificationController);
         lbm.registerReceiver(progressUpdateBroadcastReceiver, new IntentFilter(PowerHourService.PROGRESS_UPDATE_BROADCAST));
         lbm.registerReceiver(progressUpdateBroadcastReceiver, new IntentFilter(PowerHourService.PROGRESS_PAUSE_RESUME_BROADCAST));
 		lbm.registerReceiver(musicUpdateBroadcastReceiver, new IntentFilter(PowerHourService.MUSIC_UPDATE_BROADCAST));

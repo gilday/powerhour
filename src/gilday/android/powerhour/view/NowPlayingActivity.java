@@ -67,7 +67,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
-		//Log.(TAG, "onCreate");
+        setTitle(R.string.nowplaying_title);
 		
 		setContentView(R.layout.nowplaying);
 		

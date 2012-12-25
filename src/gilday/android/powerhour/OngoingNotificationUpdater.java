@@ -13,7 +13,7 @@ import gilday.android.powerhour.view.NowPlayingActivity;
  * User: Johnathan Gilday
  * Date: 6/8/12
  */
-public class OngoingNotificationUpdater implements IMusicUpdateListener, IProgressUpdateListener, IDisposable {
+public class OngoingNotificationUpdater implements NotificationController {
 
     private NotificationManager notificationManager;
     private Context context;
