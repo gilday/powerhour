@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.support.v4.app.NotificationCompat;
 import gilday.android.powerhour.model.PlaylistItem;
 import gilday.android.powerhour.view.NowPlayingActivity;
@@ -21,7 +22,10 @@ public class JellybeanOngoingNotificationUpdater implements NotificationControll
 
     private String songTitle;
     private String songArtist;
+    private Bitmap coverArt;
+
     int currentMinute = 0;
+    int notificationIconPixels; // Icon should be 64dp but we'll need to convert that to actual pixels
 
     public JellybeanOngoingNotificationUpdater(Context context) {
         this.context = context;
@@ -31,9 +35,14 @@ public class JellybeanOngoingNotificationUpdater implements NotificationControll
 
         builder =
                 new NotificationCompat.Builder(context)
-                .setSmallIcon(R.drawable.jellybeerstatusbar)
-                        .setOngoing(true)
-                        .setContentIntent(PendingIntent.getActivity(context, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+                	.setOngoing(true)
+                    .setSmallIcon(R.drawable.jellybeerstatusbar)
+                    .setContentIntent(PendingIntent.getActivity(context, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+
+        // Get screen density
+        final float scale = context.getResources().getDisplayMetrics().density;
+        // convert to dp to pixels to determine notification icon size
+        notificationIconPixels = (int) Math.ceil(64 * scale + 0.5f);
     }
 
     @Override
@@ -42,6 +51,13 @@ public class JellybeanOngoingNotificationUpdater implements NotificationControll
 
         songTitle = songInfo.song;
         songArtist = songInfo.artist;
+        Bitmap bitmap = MusicUtils.getArtwork(context, songInfo.albumId, 2);
+        if(bitmap == null) {
+        	coverArt = null;
+        } else {
+        	coverArt = Bitmap.createScaledBitmap(bitmap, notificationIconPixels, notificationIconPixels, false);
+        }
+
         updateNotificationContent();
     }
 
@@ -70,6 +86,7 @@ public class JellybeanOngoingNotificationUpdater implements NotificationControll
         builder.setContentTitle(songTitle);
         builder.setContentText(songArtist);
         builder.setContentInfo(String.format(context.getString(R.string.notification_drink), this.currentMinute));
+        builder.setLargeIcon(coverArt);
         notificationManager.notify(notificationId, builder.build());
     }
 }

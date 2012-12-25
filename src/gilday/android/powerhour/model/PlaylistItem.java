@@ -15,4 +15,5 @@ public class PlaylistItem {
 	public String song;
 	public Bitmap art;
     public int id;
+    public int albumId;
 }

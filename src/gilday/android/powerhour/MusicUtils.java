@@ -44,8 +44,9 @@ public class MusicUtils {
 			info.artist = c.getString(c.getColumnIndex(MediaStore.Audio.Media.ARTIST));
 			info.album = c.getString(c.getColumnIndex(MediaStore.Audio.Media.ALBUM));
 			info.song = c.getString(c.getColumnIndex(MediaStore.Audio.Media.TITLE));
+            info.albumId = c.getInt(c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
 			if(loadBitmap) {
-				info.art = getArtwork(context, c.getInt(c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)));
+				info.art = getArtwork(context, info.albumId);
 			}
 		}
 		catch(Exception e){
@@ -74,26 +75,23 @@ public class MusicUtils {
 		return duration;
 	}
 	
-//	public static String getArtist(Context context, int id){
-//		Cursor c = context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, 
-//				new String[] {MediaStore.Audio.Media.ARTIST}, MediaStore.Audio.Media._ID + "=" + id, null, null);
-//		return c.getString(c.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-//	}
-	
 	/**
 	 * Modified from method by the same name in the MusicUtils class found in the Android project 
 	 * @param context
 	 * @param album_id
+     * @param sampleSize corresponds to BitmapFactory.Options sample size. 1 = full size
 	 * @return
 	 */
-	private static Bitmap getArtwork(Context context, int album_id){
+	public static Bitmap getArtwork(Context context, int album_id, int sampleSize) {
+        sBitmapOptions.inSampleSize = sampleSize;
         ContentResolver res = context.getContentResolver();
         Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
+        Bitmap bitmap = null;
         if (uri != null) {
             InputStream in = null;
             try {
                 in = res.openInputStream(uri);
-                return BitmapFactory.decodeStream(in, null, sBitmapOptions);
+                bitmap = BitmapFactory.decodeStream(in, null, sBitmapOptions);
             } catch (FileNotFoundException ex) {
                 // The album art thumbnail does not actually exist. Maybe the user deleted it, or
                 // maybe it never existed to begin with.
@@ -109,7 +107,11 @@ public class MusicUtils {
                 }
             }
         }
-        return null;
+        return bitmap;
+    }
+
+    public static Bitmap getArtwork(Context context, int album_id) {
+        return getArtwork(context, album_id, 1);
     }
 	
 	public static int getPlaylistSize(Context context, long id) {
