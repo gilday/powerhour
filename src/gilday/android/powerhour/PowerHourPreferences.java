@@ -12,6 +12,9 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 
 /**
+ * Apparently PreferenceActivity's APIs are deprecated now. Supposed to use PreferenceFragment instead
+ * PreferenceFragment has not been ported to the compatibility library so will keep using deprecated API
+ * until support library is updated or 4.0 becomes gold standard
  * @author John Gilday
  *
  */

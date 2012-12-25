@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artview_description">Album Art</string>
+    <string name="playlist_description">Playlist</string>
+    <string name="pause_description">Play Pause</string>
+    <string name="skip_description">Skip</string>
+    
+</resources>

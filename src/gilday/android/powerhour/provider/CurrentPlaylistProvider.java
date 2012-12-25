@@ -80,6 +80,11 @@ public class CurrentPlaylistProvider extends ContentProvider {
 		return cursor;
 	}
 	
+	/**
+	 * InsertHelper, a fast way to make bulk inserts to a SQLite table, has been deprecated in API 17. 
+	 * It has not been replaced by anything so I will continue to use the deprecated API until next version to 
+	 * see if Android introduces a new way to do bulk inserts 
+	 */
 	@Override
 	public int bulkInsert(Uri uri, ContentValues[] values) {
 		

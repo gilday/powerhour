@@ -6,7 +6,7 @@
 	<TextView android:id="@+id/SongTitle" 
 		android:layout_height="wrap_content" android:layout_width="fill_parent" 
 		android:ellipsize="end" android:singleLine="true"
-		android:textSize="20dip" android:text="Song Title" 
+		android:textSize="20sp" android:text="Song Title" 
 		android:layout_marginTop="5dip" android:gravity="center_horizontal" />
 	<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" 
 		android:text="Artist" android:gravity="center_horizontal" android:layout_below="@+id/SongTitle" 
@@ -23,7 +23,7 @@
 	<TextView android:layout_below="@+id/SongProgress" 
 		android:layout_width="fill_parent" 
 		android:layout_marginTop="10dip" android:gravity="center_horizontal"
-		android:id="@+id/MinutesText" android:text="00" android:textSize="70dip" android:layout_height="wrap_content"/>
+		android:id="@+id/MinutesText" android:text="00" android:textSize="70sp" android:layout_height="wrap_content"/>
 		
 	<RelativeLayout
 		android:id="@+id/NowPlaying_Controls"
@@ -32,31 +32,47 @@
 		android:layout_width="wrap_content"
 		android:layout_centerHorizontal="true">
 		
-		<ImageButton android:id="@+id/PlaylistButton"
-			android:src="@drawable/playlist" android:background="@null"
-			android:layout_width="wrap_content" android:layout_height="wrap_content"
-			android:padding="0px" 
-			android:hapticFeedbackEnabled="true"
-			android:onClick="playlistClick"/>
+		<ImageButton
+		    android:id="@+id/PlaylistButton"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:background="@null"
+		    android:contentDescription="@string/playlist_description"
+		    android:hapticFeedbackEnabled="true"
+		    android:onClick="playlistClick"
+		    android:padding="0px"
+		    android:src="@drawable/playlist" />
 	
-		<ImageButton android:id="@+id/PauseButton"
-			android:src="@drawable/pause" android:background="@null"
-			android:layout_width="wrap_content" android:layout_height="wrap_content" 
-			android:padding="0px"
-			android:layout_toRightOf="@+id/PlaylistButton" 
-			android:hapticFeedbackEnabled="true" 
-			android:onClick="pauseClick" android:layout_marginLeft="25dip" android:layout_marginRight="25dip"/>
+		<ImageButton
+		    android:id="@+id/PauseButton"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_marginLeft="25dip"
+		    android:layout_marginRight="25dip"
+		    android:layout_toRightOf="@+id/PlaylistButton"
+		    android:background="@null"
+		    android:contentDescription="@string/pause_description"
+		    android:hapticFeedbackEnabled="true"
+		    android:onClick="pauseClick"
+		    android:padding="0px"
+		    android:src="@drawable/pause" />
 			
-		<ImageButton android:id="@+id/SkipButton"
-			android:src="@drawable/skip" android:background="@null"
-			android:layout_width="wrap_content" android:layout_height="wrap_content"
-			android:layout_margin="0px" android:padding="0px" 
-			android:layout_toRightOf="@+id/PauseButton" 
-			android:onClick="skipClick" />
+		<ImageButton
+		    android:id="@+id/SkipButton"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_margin="0px"
+		    android:layout_toRightOf="@+id/PauseButton"
+		    android:background="@null"
+		    android:contentDescription="@string/skip_description"
+		    android:onClick="skipClick"
+		    android:padding="0px"
+		    android:src="@drawable/skip" />
 
 	</RelativeLayout>
 	
 	<ImageView android:id="@+id/ArtView" 
+	    android:contentDescription="Album Art"
 		android:src="@drawable/bigicon" 
 		android:layout_width="fill_parent" android:layout_centerHorizontal="true" android:layout_height="wrap_content" 
 		android:layout_below="@+id/MinutesText" android:layout_above="@+id/NowPlaying_Controls" />	

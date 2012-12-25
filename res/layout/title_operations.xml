@@ -3,6 +3,6 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-<Button android:layout_width="fill_parent" android:id="@+id/playNowButton" android:text="@string/startNow_button" android:layout_marginBottom="10dip" android:layout_marginLeft="10dip" android:layout_marginRight="10dip" android:layout_height="wrap_content" android:textSize="20dip"></Button>
-<Button android:id="@+id/selectPlaylistButton" android:text="@string/startPlaylist_button" android:layout_width="fill_parent" android:layout_marginLeft="10dip" android:layout_marginRight="10dip" android:layout_height="wrap_content" android:textSize="20dip"></Button>
+<Button android:layout_width="fill_parent" android:id="@+id/playNowButton" android:text="@string/startNow_button" android:layout_marginBottom="10dip" android:layout_marginLeft="10dip" android:layout_marginRight="10dip" android:layout_height="wrap_content" android:textSize="20sp"></Button>
+<Button android:id="@+id/selectPlaylistButton" android:text="@string/startPlaylist_button" android:layout_width="fill_parent" android:layout_marginLeft="10dip" android:layout_marginRight="10dip" android:layout_height="wrap_content" android:textSize="20sp"></Button>
 </LinearLayout>

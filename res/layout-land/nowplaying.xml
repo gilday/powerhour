@@ -4,16 +4,62 @@
   android:layout_width="fill_parent"
   android:id="@+id/nowplaying_layout" android:layout_height="fill_parent" android:orientation="vertical">
     <LinearLayout android:id="@+id/two_column" android:layout_width="fill_parent" android:layout_weight="1" android:layout_marginLeft="5dip" android:layout_marginRight="5dip" android:layout_height="fill_parent">
-        <ImageView android:id="@+id/ArtView" android:src="@drawable/bigicon" android:layout_width="0dip" android:layout_weight="1" android:layout_marginRight="5dip" android:layout_height="fill_parent"/>
+
+        <ImageView
+            android:id="@+id/ArtView"
+            android:layout_width="0dip"
+            android:layout_height="fill_parent"
+            android:layout_marginRight="5dip"
+            android:layout_weight="1"
+            android:contentDescription="@string/artview_description"
+            android:src="@drawable/bigicon" />
+
         <LinearLayout android:orientation="vertical" android:layout_height="wrap_content" android:id="@+id/RightCol" android:layout_width="0dip" android:layout_weight="1" android:layout_marginLeft="5dip">
-            <TextView android:text="00" android:textSize="70dip" android:id="@+id/MinutesText" android:layout_width="fill_parent" android:layout_height="wrap_content" android:gravity="center_horizontal"></TextView>
-            <TextView android:text="Song Title" android:layout_marginTop="5dip" android:textSize="20dip" android:id="@+id/SongTitle" android:singleLine="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:ellipsize="end" android:gravity="center_horizontal"></TextView>
+            <TextView android:text="00" android:textSize="70sp" android:id="@+id/MinutesText" android:layout_width="fill_parent" android:layout_height="wrap_content" android:gravity="center_horizontal"></TextView>
+            <TextView android:text="Song Title" android:layout_marginTop="5dip" android:textSize="20sp" android:id="@+id/SongTitle" android:singleLine="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:ellipsize="end" android:gravity="center_horizontal"></TextView>
             <TextView android:text="Artist" android:id="@+id/ArtistTitle" android:layout_width="fill_parent" android:layout_height="wrap_content" android:ellipsize="end" android:gravity="center_horizontal"></TextView>
             <TextView android:text="Album" android:id="@+id/AlbumTitle" android:layout_width="fill_parent" android:layout_height="wrap_content" android:ellipsize="end" android:gravity="center_horizontal" android:maxLines="1"></TextView>
             <RelativeLayout android:layout_height="wrap_content" android:id="@+id/NowPlaying_Controls" android:layout_width="fill_parent" android:layout_gravity="bottom" android:gravity="center" android:layout_marginTop="40dip">
-                <ImageButton android:background="@null" android:hapticFeedbackEnabled="true" android:layout_width="wrap_content" android:id="@+id/PlaylistButton" android:padding="0px" android:src="@drawable/playlist" android:onClick="playlistClick" android:layout_height="wrap_content"></ImageButton>
-                <ImageButton android:layout_marginLeft="25dip" android:background="@null" android:hapticFeedbackEnabled="true" android:layout_width="wrap_content" android:layout_marginRight="25dip" android:id="@+id/PauseButton" android:padding="0px" android:src="@drawable/pause" android:layout_toRightOf="@+id/PlaylistButton" android:onClick="pauseClick" android:layout_height="wrap_content"></ImageButton>
-                <ImageButton android:layout_margin="0px" android:background="@null" android:layout_width="wrap_content" android:id="@+id/SkipButton" android:padding="0px" android:src="@drawable/skip" android:layout_toRightOf="@+id/PauseButton" android:onClick="skipClick" android:layout_height="wrap_content"></ImageButton>
+
+                <ImageButton
+                    android:id="@+id/PlaylistButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:contentDescription="@string/playlist_description"
+                    android:hapticFeedbackEnabled="true"
+                    android:onClick="playlistClick"
+                    android:padding="0px"
+                    android:src="@drawable/playlist" >
+</ImageButton>
+
+                <ImageButton
+                    android:id="@+id/PauseButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="25dip"
+                    android:layout_marginRight="25dip"
+                    android:layout_toRightOf="@+id/PlaylistButton"
+                    android:background="@null"
+                    android:contentDescription="@string/pause_description"
+                    android:hapticFeedbackEnabled="true"
+                    android:onClick="pauseClick"
+                    android:padding="0px"
+                    android:src="@drawable/pause" >
+</ImageButton>
+
+                <ImageButton
+                    android:id="@+id/SkipButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="0px"
+                    android:layout_toRightOf="@+id/PauseButton"
+                    android:background="@null"
+                    android:contentDescription="@string/skip_description"
+                    android:onClick="skipClick"
+                    android:padding="0px"
+                    android:src="@drawable/skip" >
+</ImageButton>
             </RelativeLayout>
         </LinearLayout>
     </LinearLayout>
