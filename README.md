@@ -17,8 +17,5 @@ A Power Hour is a popular drinking game in which participants take roughly a sho
 ## History ##
 I (Johnathan Gilday) wrote Power Hour Pro during my last year in college as a learning experience and in hopes for some extra pizza money. I no longer have the time required to keep the app up to date and compatible with the large number of Android devices coming to the market. I don't believe it's fair to continue charging for a product I cannot commit to; therefore, I'm opening the app up the community, for further development, under the Apache License. 
 
-## Contributing ##
-Fork this app! Please try to follow this branching model http://nvie.com/posts/a-successful-git-branching-model/ and use the Wiki to discuss new features
-
 ## License ##
 Power Hour Pro is licensed under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)

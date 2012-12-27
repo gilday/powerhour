@@ -16,7 +16,7 @@
         android:singleLine="true"
         android:text="Joelie"
         android:textColor="@color/song_item_title_text"
-        android:textSize="20dip" />
+        android:textSize="20sp" />
 
     <TextView
         android:id="@+id/songitem_artist"
@@ -29,7 +29,7 @@
         android:singleLine="true"
         android:text="Steamy Ray Vaughn"
         android:textColor="@color/song_item_text"
-        android:textSize="12dip" />
+        android:textSize="12sp" />
 
     <ToggleButton
         android:id="@+id/songitem_omit"

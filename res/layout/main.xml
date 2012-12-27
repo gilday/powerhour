@@ -6,7 +6,6 @@
 <TextView  
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
-    android:layout_marginTop="60dip" android:text="@string/title" android:textSize="38dip" android:gravity="center_horizontal" android:textColor="#FFFFFF" android:layout_marginBottom="30dip" android:id="@+id/main_title"/>
-<Button android:layout_width="fill_parent" android:id="@+id/playNowButton" android:text="@string/startNow_button" android:layout_marginBottom="10dip" android:layout_marginLeft="10dip" android:layout_marginRight="10dip" android:layout_height="wrap_content" android:textSize="20dip"></Button>
-<Button android:id="@+id/selectPlaylistButton" android:text="@string/startPlaylist_button" android:layout_width="fill_parent" android:layout_marginLeft="10dip" android:layout_marginRight="10dip" android:layout_height="wrap_content" android:textSize="20dip"></Button>
+    android:layout_marginTop="60dip" android:text="@string/title" android:textSize="38sp" android:gravity="center_horizontal" android:textColor="#FFFFFF" android:layout_marginBottom="30dip" android:id="@+id/main_title"/>
+<include layout="@layout/title_operations"/>
 </LinearLayout>

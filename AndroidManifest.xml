@@ -2,13 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="gilday.android.powerhour"
       android:versionName="2.0.2" android:versionCode="13">
-      <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="10"/>
+      <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="17"/>
       <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
-    <application android:icon="@drawable/icon" android:label="@string/app_name" android:description="@string/description">
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:description="@string/description" android:allowBackup="false" android:theme="@style/AppTheme">
     <activity android:label="@string/app_name" android:name="gilday.android.powerhour.view.TitleScreen" android:configChanges="orientation" />
     <activity android:name="PowerHourPreferences" />
     <activity android:name=".view.NowPlayingActivity" 
-    		  android:theme="@android:style/Theme.Black.NoTitleBar" 
+    		  android:theme="@style/AppTheme" 
     		  android:launchMode="singleTask">
     	<intent-filter>
 			<action android:name="android.intent.action.MAIN" />

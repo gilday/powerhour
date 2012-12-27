@@ -67,8 +67,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
-		//Log.(TAG, "onCreate");
-		setTheme(android.R.style.Theme_Black_NoTitleBar);
+        setTitle(R.string.nowplaying_title);
 		
 		setContentView(R.layout.nowplaying);
 		
@@ -162,7 +161,7 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
     public boolean onOptionsItemSelected(MenuItem item) {
     	super.onOptionsItemSelected(item);
     	switch(item.getItemId()){
-    	case R.id.stopButton_menu:
+    	case R.id.menu_stop:
 			new AlertDialog.Builder(this)
             .setTitle(getString(R.string.quit_confirmation))
             .setPositiveButton(getString(android.R.string.ok), new DialogInterface.OnClickListener() {
@@ -181,10 +180,10 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
             .setNegativeButton(getString(android.R.string.cancel), null)
             .show();
     		break;
-    	case R.id.skipButton_menu:
+    	case R.id.menu_skip:
     		skipClick(null);
     		break;
-    	case R.id.settings:
+    	case R.id.menu_preferences:
         	Intent launchPreferencesIntent = new Intent().setClass(this, PowerHourPreferences.class);
             startActivity(launchPreferencesIntent);
             break;

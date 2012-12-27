@@ -11,7 +11,7 @@
     <string name="usearnold_title">Use default alert</string>
     <string name="usearnold_summary">Do it now!</string>
     <string name="changealert_category">Song change alert</string>
-    <string name="settings">Power Hour Settings</string>
+    <string name="settings">Settings</string>
     <string name="music_category">Music</string>
     <string name="powerhour_category">Power Hour</string>
     <string name="duration_title">Power Hour duration</string>

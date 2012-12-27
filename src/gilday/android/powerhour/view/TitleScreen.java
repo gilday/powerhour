@@ -34,7 +34,8 @@ public class TitleScreen extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         TextView tv = (TextView)findViewById(R.id.main_title);
-        tv.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/COLLEGE.TTF"));
+        if(tv != null)
+        	tv.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/COLLEGE.TTF"));
 
         Button playNowButton = (Button) findViewById(R.id.playNowButton);
         Button startPlayListButton = (Button) findViewById(R.id.selectPlaylistButton);
@@ -55,7 +56,7 @@ public class TitleScreen extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.settingsmenu, menu);
+        inflater.inflate(R.menu.title_menu, menu);
         return true;
     }
 

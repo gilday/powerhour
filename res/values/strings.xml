@@ -4,7 +4,7 @@
     <string name="app_name">Power Hour Pro</string>
 <string name="title">POWER HOUR PRO</string>
 <string name="PlaylistBrowserTitle">Pick a playlist</string>
-<string name="PlaylistEditorTitle">Edit current playlist</string>
+<string name="PlaylistEditorTitle">Playlist</string>
 <string name="completed">Power Hour complete- Now go out but don\'t drive!</string>
 <string name="description">Power Hour Pro for your Android phone gives you mobility and control over your power hours. Demo version will change on 10 second intervals and will expire in 8 minutes</string>
 <string name="startNow_button">Start Now!</string>
@@ -15,4 +15,6 @@
 <string name="quit_confirmation">Are you sure you want to end Power Hour?</string>
 <string name="notification_drink">Drinks: %d</string>
 <string name="filterPlaylistsButtonText">Only show playlists large enough</string>
+<string name="stop">Stop</string>
+<string name="nowplaying_title">Now Playing</string>
 </resources>
