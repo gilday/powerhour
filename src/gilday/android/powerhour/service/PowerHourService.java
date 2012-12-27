@@ -124,8 +124,9 @@ public class PowerHourService extends Service implements ISongPreparedListener, 
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
-		myTimer.cancel();
-		if(playingState != PowerHourService.NOT_STARTED){
+
+		if(playingState != PowerHourService.NOT_STARTED) {
+            myTimer.cancel();
 			playingState = PowerHourService.NOT_STARTED;
 			songPlayer.dispose();
 		}

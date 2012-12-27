@@ -245,16 +245,20 @@ public class NowPlayingActivity extends Activity implements IMusicUpdateListener
     };
     
     public void pauseClick(View v) {
-    	// Send pause. This Activity will receive a callback when the Power Hour's progression has 
-    	// changed so will handle chaning the UI accordingly in those callbacks
-		phService.playPause();
+    	if(phService != null) {
+	    	// Send pause. This Activity will receive a callback when the Power Hour's progression has 
+	    	// changed so will handle changing the UI accordingly in those callbacks
+			phService.playPause();
+    	}
     }
     
     public void skipClick(View v) {
-		int nextID = phService.skip();
-		if(nextID < 0){
-			Toast.makeText(this, "Cannot skip last song", Toast.LENGTH_LONG).show();
-		}
+    	if(phService != null) {
+			int nextID = phService.skip();
+			if(nextID < 0){
+				Toast.makeText(this, "Cannot skip last song", Toast.LENGTH_LONG).show();
+			}
+    	}
     }
     
     public void playlistClick(View v) {

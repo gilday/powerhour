@@ -81,6 +81,10 @@ public abstract class InitializePlaylistTask extends AsyncTask<Void, Void, Integ
 	
 	private void setSongsToImportCount() 
 	{
+		if(importCursor == null) {
+			// The query has failed
+			throw new IllegalStateException("Could not find any songs");
+		}
 		songsToImportCount = importCursor.getCount();
 		if(songsToImportCount <= 0) {
 			throw new IllegalStateException("Cannot initialize a power hour with no songs to import");

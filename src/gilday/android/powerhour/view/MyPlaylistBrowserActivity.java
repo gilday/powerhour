@@ -86,8 +86,12 @@ public class MyPlaylistBrowserActivity extends Activity {
 		Cursor cursor = getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
 				new String[] {MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME}, null, null, 
 				MediaStore.Audio.Playlists.DEFAULT_SORT_ORDER);
+		if(cursor == null) {
+			return;
+		}
         if(!cursor.moveToFirst()){
         	// Cursor is empty, return
+        	cursor.close();
         	return;
         }
         int colidx = cursor.getColumnIndex(MediaStore.Audio.Playlists._ID);
