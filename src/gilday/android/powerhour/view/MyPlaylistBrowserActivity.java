@@ -14,6 +14,7 @@ import java.util.HashMap;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -30,9 +31,11 @@ import android.widget.SimpleAdapter;
  */
 public class MyPlaylistBrowserActivity extends Activity {
 	
-	private static String ID   = "playlist_id";
-	private static String NAME = "playlist_name";
-	private static String SIZE = "playlist_size";
+	private static final Uri GOOGLE_MUSIC_URI = Uri.parse("content://com.google.android.music.MusicContent/playlists");
+	
+	private static final String ID   = "playlist_id";
+	private static final String NAME = "playlist_name";
+	private static final String SIZE = "playlist_size";
 	
 	// List of playlists in the form of key,value property mappings. Used for SimpleAdapter
 	private ArrayList<HashMap<String,String>> playlists = new ArrayList<HashMap<String,String>>();
@@ -83,7 +86,10 @@ public class MyPlaylistBrowserActivity extends Activity {
 		playlists.clear();
 		// Get playlist information from the system's MediaStore
 		// Include playlist ID and name
-		Cursor cursor = getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+/*		Cursor cursor = getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+				new String[] {MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME}, null, null, 
+				MediaStore.Audio.Playlists.DEFAULT_SORT_ORDER);*/
+		Cursor cursor = getContentResolver().query(GOOGLE_MUSIC_URI,
 				new String[] {MediaStore.Audio.Playlists._ID, MediaStore.Audio.Playlists.NAME}, null, null, 
 				MediaStore.Audio.Playlists.DEFAULT_SORT_ORDER);
 		if(cursor == null) {
