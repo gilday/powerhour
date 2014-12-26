@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="gilday.android.powerhour"
+      android:versionName="2.1" android:versionCode="14">
+      <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="17"/>
+      <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:description="@string/description" android:allowBackup="false" android:theme="@style/AppTheme">
+    <activity android:label="@string/app_name" android:name="gilday.android.powerhour.view.TitleScreen" android:configChanges="orientation" />
+    <activity android:name="PowerHourPreferences" />
+    <activity android:name=".view.NowPlayingActivity" 
+    		  android:theme="@style/AppTheme" 
+    		  android:launchMode="singleTask">
+    	<intent-filter>
+			<action android:name="android.intent.action.MAIN" />
+			<category android:name="android.intent.category.LAUNCHER" />
+		</intent-filter>
+	</activity>
+	<activity android:name="gilday.android.powerhour.view.MyPlaylistBrowserActivity" />
+	<activity android:name="gilday.android.powerhour.view.SurrogateActivity" />
+	<service android:name=".service.PowerHourService" android:exported="false" >
+		<intent-filter>
+			<action android:name="com.johnathangilday.powerhour.action.playpause" />
+			<action android:name="com.johnathangilday.powerhour.action.skip" />
+		</intent-filter>
+	</service>
+	<activity android:name="gilday.android.powerhour.view.PlaylistEditor"/>
+	<provider android:label="Power Hour playlists" android:icon="@drawable/icon" android:authorities="com.johnathangilday.powerhour.provider" android:name=".provider.CurrentPlaylistProvider" android:exported="false"/>android.intent.action.MEDIA_BUTTONandroid.intent.action.MEDIA_BUTTONandroid.intent.action.MEDIA_BUTTON
+	<receiver android:name=".service.MediaButtonsReceiver" android:exported="false" android:enabled="true">
+		<intent-filter>
+			<action android:name="android.intent.action.MEDIA_BUTTON"/>
+		</intent-filter>
+	</receiver>
+</application>
+</manifest> 
