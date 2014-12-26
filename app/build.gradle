@@ -1,14 +1,15 @@
-/**
- * custom function
- */
-def execOutput = { args ->
-    def proc = args.execute()
-    proc.waitFor()
-    def stdout = proc.in.text
-    return stdout.trim()
-}
-
 apply plugin: 'com.android.application'
+
+try {
+    project.ext.keystore = System.env.POWERHOUR_KEYSTORE
+    project.ext.keystoreAlias = System.env.POWERHOUR_ALIAS
+    project.ext.keystorePassphrase = "keyring get google-play ${file(System.env.POWERHOUR_KEYSTORE).name}".execute().text.trim()
+} catch(Exception ignored) {
+    // IDEA has issues sync'ing gradle files with 'exec' so catch exception and fill with garbage until this is fixed
+    project.ext.keystore = '/dev/null'
+    project.ext.keystoreAlias = ''
+    project.ext.keystorePassphrase = ''
+}
 
 dependencies {
     compile 'com.android.support:support-v4:21.0.3'
@@ -26,10 +27,10 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("$System.env.POWERHOUR_KEYSTORE")
-            storePassword execOutput(['keyring', 'get', 'google-play', storeFile.name])
-            keyAlias "$System.env.POWERHOUR_ALIAS"
-            keyPassword execOutput(['keyring', 'get', 'google-play', storeFile.name])
+            storeFile file(keystore)
+            storePassword keystorePassphrase
+            keyAlias keystoreAlias
+            keyPassword keystorePassphrase
         }
     }
 
